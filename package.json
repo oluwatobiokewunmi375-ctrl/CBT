@@ -8,8 +8,8 @@
     "lint:fix": "npm run lint --workspaces -- --fix --no-error-on-unmatched-pattern 2>/dev/null || true",
     "type-check": "npm run type-check --workspaces || true",
     "test": "npm run test --workspaces -- --passWithNoTests || true",
-    "dev": "npm run dev --workspaces",
-    "build": "npm run build --workspaces",
+    "dev": "next dev",
+    "build": "next build",
     "format": "prettier --write \"apps/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "workspaces": [
