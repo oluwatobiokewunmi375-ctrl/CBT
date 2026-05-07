@@ -3,13 +3,13 @@
 out/
 dist/
 build/
+coverage/
 .env
 .env.*
 *.log
-coverage/
+.DS_Store
 .vscode/
 .idea/
-.DS_Store
-tsconfig.tsbuildinfo
 .cache/
 .eslintcache
+*.tsbuildinfo
