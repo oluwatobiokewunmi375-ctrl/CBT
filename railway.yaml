@@ -1,0 +1,50 @@
+# Railway configuration
+version: 1
+
+services:
+  - name: postgres
+    service: postgres
+    environment:
+      - POSTGRES_DB=$DB_NAME
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  - name: redis
+    service: redis
+    environment:
+      - REDIS_PASSWORD=$REDIS_PASSWORD
+
+  - name: api
+    builder: dockerfile
+    dockerfile: apps/api/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@postgres/cbt
+      - REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379
+      - PORT=5000
+    ports:
+      - 5000:5000
+    depends_on:
+      - postgres
+      - redis
+
+  - name: web
+    builder: dockerfile
+    dockerfile: apps/web/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://cbt-api.railway.app
+    ports:
+      - 3000:3000
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+
+variables:
+  - DATABASE_URL=$DATABASE_URL
+  - REDIS_URL=$REDIS_URL
+  - JWT_SECRET=$JWT_SECRET
