@@ -1,3 +1,4 @@
+import ServiceWorkerRegister from '../components/ServiceWorkerRegister';
 export const metadata = {
   title: "CBT SaaS",
   description: "Enterprise CBT System",
@@ -11,8 +12,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+      <ServiceWorkerRegister />
         {children}
       </body>
     </html>
   );
 }
+
+
+
