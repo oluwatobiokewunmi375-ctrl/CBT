@@ -1,19 +1,6 @@
 {
   "version": 2,
-  "projects": [
-    {
-      "name": "cbt-web",
-      "rootDirectory": "apps/web",
-      "buildCommand": "npm run build -w apps/web",
-      "outputDirectory": ".next"
-    },
-    {
-      "name": "cbt-api",
-      "rootDirectory": "apps/api",
-      "buildCommand": "npm run build -w apps/api",
-      "outputDirectory": "dist"
-    }
-  ],
+  
   "env": {
     "DATABASE_URL": "@database_url",
     "REDIS_URL": "@redis_url",
@@ -35,3 +22,4 @@
     }
   ]
 }
+
