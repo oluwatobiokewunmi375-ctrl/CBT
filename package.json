@@ -10,7 +10,11 @@
     "test": "npm run test --workspaces -- --passWithNoTests || true",
     "dev": "next dev",
     "build": "next build",
-    "format": "prettier --write \"apps/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format": "prettier --write \"apps/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "verify": "node scripts/verify-integrity.js",
+    "check": "npm run verify && npm run type-check && npm run lint",
+    "secure": "git status && npm run verify",
+    "lock": "git add . && git commit -m 'LOCK: Secure checkpoint before changes'"
   },
   "workspaces": [
     "apps/api",
