@@ -2,7 +2,7 @@
   "version": 2,
   
   "env": {
-    "DATABASE_URL": "@database_url",
+    
     "REDIS_URL": "@redis_url",
     "JWT_SECRET": "@jwt_secret",
     "STRIPE_SECRET_KEY": "@stripe_secret_key",
@@ -22,4 +22,5 @@
     }
   ]
 }
+
 
