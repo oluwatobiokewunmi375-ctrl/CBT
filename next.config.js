@@ -1,11 +1,7 @@
 ﻿const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  compress: true,
-  productionBrowserSourceMaps: false,
-  images: {
-    formats: ['image/avif', 'image/webp']
-  }
+  reactStrictMode: false,
+  poweredByHeader: false,
+  compress: true
 };
 
 module.exports = nextConfig;
