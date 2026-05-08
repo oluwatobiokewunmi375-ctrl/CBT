@@ -1,4 +1,5 @@
-﻿'use client';
+import { loadExam } from '@/lib/exams/examLoader'
+'use client';
 
 import { useOfflineExam }
 from '@/hooks/useOfflineExam';
@@ -108,3 +109,4 @@ export default function OfflineExamRunner({
   );
 
 }
+
