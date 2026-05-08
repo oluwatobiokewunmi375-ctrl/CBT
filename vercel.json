@@ -3,8 +3,6 @@
   
   "env": {
     
-    "JWT_SECRET": "@jwt_secret",
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
     "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret"
   },
   "functions": {
@@ -21,6 +19,7 @@
     }
   ]
 }
+
 
 
 
