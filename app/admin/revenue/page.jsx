@@ -14,15 +14,19 @@ export default function RevenueDashboard() {
 
   return (
     <div style={{ padding: 40 }}>
-      <h1>Admin Revenue Dashboard</h1>
+      <h1>LIVE SaaS Revenue Dashboard</h1>
 
-      {!data && <p>Loading...</p>}
+      {!data && <p>Loading live data...</p>}
 
       {data && (
         <div>
-          <h3>Total Schools: {data.totalSchools}</h3>
-          <h3>Active Subscriptions: {data.activeSubscriptions}</h3>
-          <h3>Total Subscriptions: {data.totalSubscriptions}</h3>
+          <h3>🏫 Schools: {data.totalSchools}</h3>
+          <h3>💳 Active Subscriptions: {data.activeSubscriptions}</h3>
+          <h3>📦 Total Subscriptions: {data.totalSubscriptions}</h3>
+          <h3>💰 Revenue: ₦{data.totalRevenue}</h3>
+
+          <h4>Recent Payments</h4>
+          <pre>{JSON.stringify(data.recentPayments, null, 2)}</pre>
         </div>
       )}
     </div>
