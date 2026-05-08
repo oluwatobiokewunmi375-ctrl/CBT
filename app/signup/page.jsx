@@ -1,20 +1,21 @@
 ﻿'use client'
 
-export default function LoginPage() {
+export default function SignupPage() {
   return (
     <div style={container}>
       <form style={form}>
-        <h1>🔐 Login</h1>
+        <h1>🏫 School Signup</h1>
 
-        <input placeholder="Email" style={input} />
+        <input placeholder="School Name" style={input} />
+        <input placeholder="Admin Email" style={input} />
         <input placeholder="Password" type="password" style={input} />
 
         <button style={button}>
-          Login
+          Create School Account
         </button>
 
         <p>
-          No account? <a href="/signup">Signup</a>
+          Already registered? <a href="/login">Login</a>
         </p>
       </form>
     </div>
@@ -33,7 +34,7 @@ const form = {
   background: 'white',
   padding: '40px',
   borderRadius: '12px',
-  width: '350px',
+  width: '400px',
   display: 'flex',
   flexDirection: 'column',
   gap: '15px'

@@ -1,25 +1,42 @@
 ﻿export default function PricingPage() {
   return (
-    <div style={{ padding: 40 }}>
-      <h1>CBT SaaS Pricing</h1>
+    <div style={{
+      padding: '50px',
+      background: '#f5f7fb',
+      minHeight: '100vh'
+    }}>
+      <h1>💳 Pricing</h1>
 
-      <div>
-        <h2>Starter School</h2>
-        <p>Basic CBT exams + results</p>
-        <h3>₦10,000 / month</h3>
-      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))',
+        gap: '20px',
+        marginTop: '40px'
+      }}>
+        <div style={card}>
+          <h2>Starter</h2>
+          <h1>₦25,000</h1>
+          <p>Basic CBT setup for small schools.</p>
+        </div>
 
-      <div>
-        <h2>Pro School</h2>
-        <p>Advanced analytics + AI monitoring</p>
-        <h3>₦25,000 / month</h3>
-      </div>
+        <div style={card}>
+          <h2>Professional</h2>
+          <h1>₦75,000</h1>
+          <p>Advanced exams, analytics, anti-cheat.</p>
+        </div>
 
-      <div>
-        <h2>Enterprise</h2>
-        <p>Full SaaS + multi-campus support</p>
-        <h3>₦50,000 / month</h3>
+        <div style={card}>
+          <h2>Enterprise</h2>
+          <h1>Custom</h1>
+          <p>Large-scale school deployments.</p>
+        </div>
       </div>
     </div>
   )
+}
+
+const card = {
+  background: 'white',
+  padding: '30px',
+  borderRadius: '12px'
 }
