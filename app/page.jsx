@@ -1,109 +1,126 @@
-﻿export default function HomePage() {
+﻿'use client'
+
+import Link from 'next/link'
+
+export default function HomePage() {
+
+  const features = [
+    {
+      title: 'CBT Exams',
+      desc: 'Run secure online examinations for schools.'
+    },
+    {
+      title: 'Analytics',
+      desc: 'Track student performance and results.'
+    },
+    {
+      title: 'Payments',
+      desc: 'Accept subscriptions with Paystack.'
+    }
+  ]
+
   return (
     <main style={{
-      fontFamily: 'Arial',
+      minHeight: '100vh',
+      background: '#0f172a',
+      color: 'white',
       padding: '40px',
-      background: '#f5f7fb',
-      minHeight: '100vh'
+      fontFamily: 'Arial'
     }}>
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        marginBottom: '50px'
-      }}>
-        <h2>🎓 CBT SaaS</h2>
 
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <a href="/login">Login</a>
-          <a href="/signup">Signup</a>
-          <a href="/pricing">Pricing</a>
-        </div>
-      </nav>
-
-      <section style={{
-        textAlign: 'center',
-        padding: '80px 20px'
-      }}>
+      <section style={{ textAlign: 'center', marginTop: '60px' }}>
         <h1 style={{
-          fontSize: '52px',
+          fontSize: '48px',
+          fontWeight: 'bold',
           marginBottom: '20px'
         }}>
-          Digital CBT Platform For Schools
+          🎓 CBT SaaS Platform
         </h1>
 
         <p style={{
           fontSize: '20px',
-          color: '#555',
-          maxWidth: '700px',
-          margin: '0 auto 30px'
+          color: '#cbd5e1',
+          marginBottom: '40px'
         }}>
-          Run secure computer-based exams with automatic marking,
-          anti-cheating protection, analytics, and school management.
+          Professional Computer Based Testing System
         </p>
 
         <div style={{
           display: 'flex',
+          gap: '20px',
           justifyContent: 'center',
-          gap: '20px'
+          flexWrap: 'wrap'
         }}>
-          <a href="/signup">
+          <Link href="/login">
+            <button style={{
+              padding: '15px 30px',
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer'
+            }}>
+              Login
+            </button>
+          </Link>
+
+          <Link href="/signup">
             <button style={{
               padding: '15px 30px',
               background: 'black',
               color: 'white',
-              border: 'none',
-              borderRadius: '8px',
+              border: '1px solid white',
+              borderRadius: '10px',
               cursor: 'pointer'
             }}>
-              Get Started
+              Signup
             </button>
-          </a>
+          </Link>
 
-          <a href="/admin">
+          <Link href="/pricing">
             <button style={{
               padding: '15px 30px',
-              borderRadius: '8px',
+              background: '#16a34a',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
               cursor: 'pointer'
             }}>
-              Admin Portal
+              Pricing
             </button>
-          </a>
+          </Link>
         </div>
       </section>
 
       <section style={{
+        marginTop: '80px',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))',
-        gap: '20px',
-        marginTop: '80px'
+        gap: '20px'
       }}>
-        <div style={cardStyle}>
-          <h3>📝 CBT Exams</h3>
-          <p>Create and manage digital examinations easily.</p>
-        </div>
+        {features.map((feature, index) => (
+          <div
+            key={index}
+            style={{
+              background: '#1e293b',
+              padding: '25px',
+              borderRadius: '12px'
+            }}
+          >
+            <h2 style={{
+              fontSize: '24px',
+              marginBottom: '10px'
+            }}>
+              {feature.title}
+            </h2>
 
-        <div style={cardStyle}>
-          <h3>⚡ Auto Marking</h3>
-          <p>Instant results and performance analytics.</p>
-        </div>
-
-        <div style={cardStyle}>
-          <h3>🔐 Anti-Cheat</h3>
-          <p>Behavior tracking and exam integrity systems.</p>
-        </div>
-
-        <div style={cardStyle}>
-          <h3>🏫 Multi-School SaaS</h3>
-          <p>Manage multiple schools securely.</p>
-        </div>
+            <p style={{ color: '#cbd5e1' }}>
+              {feature.desc}
+            </p>
+          </div>
+        ))}
       </section>
+
     </main>
   )
-}
-
-const cardStyle = {
-  background: 'white',
-  padding: '30px',
-  borderRadius: '12px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
 }

@@ -1,6 +1,6 @@
-import { loadExam } from '@/lib/exams/examLoader'
-'use client';
+'use client'
 
+import { loadExam } from '@/lib/exams/examLoader'
 import { useOfflineExam }
 from '@/hooks/useOfflineExam';
 

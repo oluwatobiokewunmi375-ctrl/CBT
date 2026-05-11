@@ -40,3 +40,4 @@ const card = {
   padding: '30px',
   borderRadius: '12px'
 }
+
