@@ -1,13 +1,13 @@
 'use client'
 import { useRouter } from "next/navigation"
 
-export default function Dashboard() {
+export default function ExamList() {
   const router = useRouter()
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>STUDENT DASHBOARD</h1>
-      <button onClick={() => router.push("/exam-list")}>
+      <h1>AVAILABLE EXAMS</h1>
+      <button onClick={() => router.push("/exam/1")}>
         Start Exam
       </button>
     </div>
