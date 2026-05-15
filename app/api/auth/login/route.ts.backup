@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
     let user = null;
     let student = null;
 
-    // Exam login: using student ID number only
     if (studentNo && !email) {
       student = await prisma.student.findUnique({
         where: { studentNo },
@@ -44,7 +43,6 @@ export async function POST(req: NextRequest) {
 
       user = student.user;
     } else {
-      // Dashboard login: email + password
       user = await prisma.user.findUnique({
         where: { email },
         include: {
@@ -54,12 +52,7 @@ export async function POST(req: NextRequest) {
               classRoom: true,
             },
           },
-          teacher: {
-            include: {
-              school: true,
-              classRoom: true,
-            },
-          },
+          teacher: true,
         },
       });
 
@@ -132,5 +125,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
 

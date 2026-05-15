@@ -16,18 +16,23 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     schoolCode: '',
+    parentName: '',
+    parentPhone: '',
+    parentEmail: '',
+    dob: '',
+    gender: '',
+    address: '',
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
     if (!formData.fullName || !formData.email || !formData.password) {
-      toast.error('Please fill all fields')
+      toast.error('Please fill all required fields')
       return
     }
 
@@ -42,19 +47,29 @@ export default function SignupPage() {
     }
 
     setLoading(true)
-
     try {
       const role = userType === 'admin' ? 'SCHOOL_ADMIN' : 'STUDENT'
+      const payload: any = {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        role,
+        schoolCode: formData.schoolCode || undefined,
+      }
+
+      if (userType === 'student') {
+        payload.parentName = formData.parentName || undefined
+        payload.parentPhone = formData.parentPhone || undefined
+        payload.parentEmail = formData.parentEmail || undefined
+        payload.dob = formData.dob || undefined
+        payload.gender = formData.gender || undefined
+        payload.address = formData.address || undefined
+      }
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          role,
-          schoolCode: formData.schoolCode || undefined,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
@@ -64,13 +79,15 @@ export default function SignupPage() {
         return
       }
 
-      toast.success('Account created! Logging you in...')
-      
-      // Log them in automatically
+      if (userType === 'student' && data.user.student?.studentNo) {
+        toast.success(`Account created! Your Student ID: ${data.user.student.studentNo}`)
+      } else {
+        toast.success('Account created! Logging you in...')
+      }
+
       localStorage.setItem('authToken', data.token || '')
       localStorage.setItem('user', JSON.stringify(data.user))
-      
-      // Redirect based on role
+
       if (role === 'SCHOOL_ADMIN') {
         router.push('/onboarding')
       } else {
@@ -166,19 +183,97 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* School Code (Admin Only) */}
-            {userType === 'admin' && (
-              <div>
-                <label className="block text-sm font-medium mb-2">School Code (optional)</label>
-                <input
-                  type="text"
-                  name="schoolCode"
-                  value={formData.schoolCode}
-                  onChange={handleChange}
-                  placeholder="e.g., SCH001"
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
-                />
-              </div>
+            {/* School Code */}
+            <div>
+              <label className="block text-sm font-medium mb-2">School Code {userType === 'student' && '*'}</label>
+              <input
+                type="text"
+                name="schoolCode"
+                value={formData.schoolCode}
+                onChange={handleChange}
+                placeholder="e.g., SCH001"
+                required={userType === 'student'}
+                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+              />
+            </div>
+
+            {/* Student Profile Fields */}
+            {userType === 'student' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleChange}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Gender</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Address</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Your home address"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Parent/Guardian Name</label>
+                  <input
+                    type="text"
+                    name="parentName"
+                    value={formData.parentName}
+                    onChange={handleChange}
+                    placeholder="Parent or guardian full name"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Parent/Guardian Phone</label>
+                  <input
+                    type="tel"
+                    name="parentPhone"
+                    value={formData.parentPhone}
+                    onChange={handleChange}
+                    placeholder="+234 XXX XXXX XXX"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Parent/Guardian Email</label>
+                  <input
+                    type="email"
+                    name="parentEmail"
+                    value={formData.parentEmail}
+                    onChange={handleChange}
+                    placeholder="parent@example.com"
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                  />
+                </div>
+              </>
             )}
 
             {/* Password */}

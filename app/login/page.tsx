@@ -1,18 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-import { Mail, Lock, ArrowRight, Loader } from 'lucide-react'
+import { Mail, Lock, ArrowRight, Loader, Ticket } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [loginMode, setLoginMode] = useState<'dashboard' | 'exam'>('dashboard')
+  const [school, setSchool] = useState<any>(null)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    studentNo: '',
+    schoolCode: '',
   })
+
+  useEffect(() => {
+    const schoolCode = new URLSearchParams(window.location.search).get('school')
+    if (schoolCode) {
+      fetchSchoolBranding(schoolCode)
+    }
+  }, [])
+
+  const fetchSchoolBranding = async (code: string) => {
+    try {
+      const res = await fetch(`/api/school?shortCode=${code}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSchool(data.school)
+        setFormData(prev => ({ ...prev, schoolCode: code }))
+      }
+    } catch (error) {
+      console.error('Failed to load school:', error)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -23,10 +47,14 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      const loginData = loginMode === 'dashboard'
+        ? { email: formData.email, password: formData.password }
+        : { studentNo: formData.studentNo }
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(loginData),
       })
 
       const data = await response.json()
@@ -36,19 +64,21 @@ export default function LoginPage() {
         return
       }
 
-      // Store token in localStorage
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      
+
       toast.success('Login successful!')
-      
-      // Redirect based on role
-      if (data.user.role === 'SUPER_ADMIN') {
-        router.push('/super-admin/dashboard')
-      } else if (data.user.role === 'SCHOOL_ADMIN' || data.user.role === 'TEACHER') {
-        router.push('/admin/dashboard')
+
+      if (loginMode === 'exam') {
+        router.push('/exam-list')
       } else {
-        router.push('/dashboard')
+        if (data.user.role === 'SUPER_ADMIN') {
+          router.push('/super-admin/dashboard')
+        } else if (data.user.role === 'SCHOOL_ADMIN' || data.user.role === 'TEACHER') {
+          router.push('/admin/dashboard')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (error) {
       toast.error('An error occurred. Please try again.')
@@ -59,76 +89,131 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4 py-8"
+    >
+      {/* School Branding Background */}
+      {school?.bannerUrl && (
+        <div className="absolute inset-0 opacity-10">
+          <img src={school.bannerUrl} alt="School Banner" className="w-full h-full object-cover" />
+        </div>
+      )}
+
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Card */}
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-2xl p-8 shadow-2xl">
+          {/* School Logo */}
+          {school?.logoUrl && (
+            <div className="flex justify-center mb-6">
+              <img src={school.logoUrl} alt={school.name} className="h-16 w-auto" />
+            </div>
+          )}
+
           {/* Header */}
           <div className="text-center mb-8">
+            {school?.name && <h1 className="text-xl font-bold mb-2">{school.name}</h1>}
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-              CBT Pro
+              CBT System
             </div>
-            <h1 className="text-2xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-slate-400">Sign in to your account to continue</p>
+            <p className="text-slate-400">Access your account</p>
+          </div>
+
+          {/* Login Mode Selection */}
+          <div className="flex gap-4 mb-6">
+            <button
+              type="button"
+              onClick={() => setLoginMode('dashboard')}
+              className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                loginMode === 'dashboard'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMode('exam')}
+              className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                loginMode === 'exam'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Exam
+            </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
-                />
-              </div>
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Dashboard Login */}
+            {loginMode === 'dashboard' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      required
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                    />
+                  </div>
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
-                />
-              </div>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      required
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Forgot Password */}
-            <div className="flex justify-end">
-              <Link
-                href="/forgot-password"
-                className="text-sm text-blue-400 hover:text-blue-300 transition"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            {/* Exam Login */}
+            {loginMode === 'exam' && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Student ID Number</label>
+                <div className="relative">
+                  <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    name="studentNo"
+                    value={formData.studentNo}
+                    onChange={handleChange}
+                    placeholder="e.g., 0001"
+                    required
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition text-center text-lg tracking-widest"
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-2">Enter your 4-6 digit student ID number from your ID card</p>
+              </div>
+            )}
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-3 font-semibold flex items-center justify-center gap-2 transition transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-3 font-semibold flex items-center justify-center gap-2 transition transform hover:scale-105 mt-6"
             >
               {loading ? (
                 <>
@@ -144,24 +229,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo Info */}
-          <div className="mt-6 p-4 bg-slate-700/30 rounded-lg border border-slate-700">
-            <p className="text-xs text-slate-400 mb-2 font-semibold">DEMO CREDENTIALS:</p>
-            <p className="text-xs text-slate-300">
-              Student: student@demo.com / password123
-            </p>
-            <p className="text-xs text-slate-300">
-              Admin: admin@demo.com / password123
-            </p>
-          </div>
-
-          {/* Sign Up Link */}
-          <p className="text-center text-slate-400 mt-6">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition">
-              Sign up here
+          {/* Links */}
+          <div className="flex justify-between text-sm mt-6">
+            <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300">
+              Forgot password?
             </Link>
-          </p>
+            <Link href="/signup" className="text-blue-400 hover:text-blue-300">
+              Create account
+            </Link>
+          </div>
         </div>
       </div>
     </div>

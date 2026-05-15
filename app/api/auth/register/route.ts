@@ -5,6 +5,15 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+// Generate school-specific student ID numbers
+async function generateStudentNo(schoolId: string): Promise<string> {
+  const studentCount = await prisma.student.count({
+    where: { schoolId },
+  });
+  const nextNumber = studentCount + 1;
+  return nextNumber.toString().padStart(4, "0");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -13,7 +22,6 @@ export async function POST(req: NextRequest) {
       fullName,
       role,
       schoolCode,
-      studentNo,
       classRoomId,
       dob,
       gender,
@@ -21,7 +29,9 @@ export async function POST(req: NextRequest) {
       parentName,
       parentPhone,
       parentEmail,
+      address,
       employeeNo,
+      department,
     } = await req.json();
 
     if (!email || !password || !fullName) {
@@ -67,23 +77,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let generatedStudentNo = studentNo || null;
-    if (!generatedStudentNo && school && role === "STUDENT") {
-      generatedStudentNo = `STU-${school.shortCode}-${Date.now()}`;
-    }
-
-    if (generatedStudentNo) {
-      const existingStudent = await prisma.student.findUnique({
-        where: { studentNo: generatedStudentNo },
-      });
-      if (existingStudent) {
-        return NextResponse.json(
-          { error: "Student number already in use" },
-          { status: 409 }
-        );
-      }
-    }
-
     const hashedPassword = await hash(password, 12);
     const user = await prisma.user.create({
       data: {
@@ -92,16 +85,13 @@ export async function POST(req: NextRequest) {
         fullName,
         role: role || "STUDENT",
       },
-      include: {
-        student: true,
-        teacher: true,
-      },
     });
 
     let student = null;
     let teacher = null;
 
     if (user.role === "STUDENT" && school) {
+      const generatedStudentNo = await generateStudentNo(school.id);
       student = await prisma.student.create({
         data: {
           userId: user.id,
@@ -114,6 +104,7 @@ export async function POST(req: NextRequest) {
           parentName: parentName || undefined,
           parentPhone: parentPhone || undefined,
           parentEmail: parentEmail || undefined,
+          address: address || undefined,
         },
         include: {
           school: true,
@@ -127,7 +118,10 @@ export async function POST(req: NextRequest) {
         data: {
           userId: user.id,
           schoolId: school.id,
-          employeeNo: employeeNo || `TCH-${school.shortCode}-${Date.now()}`,
+          employeeNo:
+            employeeNo ||
+            `TCH-${school.shortCode}-${Date.now().toString().slice(-6)}`,
+          department: department || undefined,
           classRoomId: classRoomId || undefined,
         },
         include: {
@@ -158,8 +152,23 @@ export async function POST(req: NextRequest) {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
-          student,
-          teacher,
+          student: student
+            ? {
+                id: student.id,
+                studentNo: student.studentNo,
+                school: student.school,
+                classRoom: student.classRoom,
+              }
+            : null,
+          teacher: teacher
+            ? {
+                id: teacher.id,
+                employeeNo: teacher.employeeNo,
+                department: teacher.department,
+                school: teacher.school,
+                classRoom: teacher.classRoom,
+              }
+            : null,
         },
       },
       { status: 201 }
@@ -172,4 +181,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

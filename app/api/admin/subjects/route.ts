@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         school: true,
-        classRoom: true,
+        ClassRoom: true,
       },
     });
 
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
             name: true,
           },
         },
-        classRoom: {
+        ClassRoom: {
           select: {
             id: true,
             name: true,
