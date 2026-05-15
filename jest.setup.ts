@@ -93,3 +93,40 @@ globalThis.fetch = async (input, init = {}) => {
 };
 
 export {};
+
+// Force-replace global XMLHttpRequest with a lightweight shim that forwards to fetch
+// This prevents jsdom's native XHR from performing uncontrolled network requests during tests.
+// @ts-ignore
+globalThis.XMLHttpRequest = class {
+  _method = "GET";
+  _url = "";
+  _headers: Record<string, string> = {};
+  onload: ((this: any, ev: any) => any) | null = null;
+  onerror: ((this: any, ev: any) => any) | null = null;
+  status = 0;
+  responseText: string | null = null;
+
+  open(method: string, url: string) {
+    this._method = method;
+    this._url = url;
+  }
+
+  setRequestHeader(name: string, value: string) {
+    this._headers[name] = value;
+  }
+
+  async send(body?: any) {
+    try {
+      const res = await (globalThis.fetch as any)(this._url, {
+        method: this._method,
+        headers: this._headers,
+        body,
+      } as any);
+      this.status = res.status;
+      this.responseText = await res.text();
+      if (this.onload) setTimeout(() => this.onload && this.onload({ target: this }), 0);
+    } catch (err) {
+      if (this.onerror) setTimeout(() => this.onerror && this.onerror(err), 0);
+    }
+  }
+} as any;
