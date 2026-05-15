@@ -91,7 +91,7 @@ export default function StudentDashboard() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken')
+    localStorage.removeItem('token')
     localStorage.removeItem('user')
     toast.success('Logged out successfully')
     router.push('/')

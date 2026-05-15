@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || !["ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -27,7 +27,15 @@ export async function GET(req: NextRequest) {
     } else if (decoded.role === "ADMIN") {
       // For school admin, we need to get school from context
       // This is a simplified version - in production you'd have admin-school relationship
-      schoolId = req.headers.get("x-school-id");
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      }) as { schoolId?: string } | null;
+      schoolId = user?.schoolId || req.headers.get("x-school-id");
+    } else if (decoded.role === "SCHOOL_ADMIN") {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      }) as { schoolId?: string } | null;
+      schoolId = user?.schoolId || req.headers.get("x-school-id");
     }
 
     // Get stats

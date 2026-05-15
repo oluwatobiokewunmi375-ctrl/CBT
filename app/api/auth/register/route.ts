@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         fullName,
         role: role || "STUDENT",
+        schoolId: school?.id,
       },
     });
 
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
         },
         include: {
           school: true,
-          classRoom: true,
+          ClassRoom: true,
         },
       });
     }
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
         },
         include: {
           school: true,
-          classRoom: true,
+          ClassRoom: true,
         },
       });
     }
@@ -152,6 +153,16 @@ export async function POST(req: NextRequest) {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          school: school
+            ? {
+                id: school.id,
+                name: school.name,
+                shortCode: school.shortCode,
+                logoUrl: school.logoUrl,
+                bannerUrl: school.bannerUrl,
+                theme: school.theme,
+              }
+            : null,
           student: student
             ? {
                 id: student.id,

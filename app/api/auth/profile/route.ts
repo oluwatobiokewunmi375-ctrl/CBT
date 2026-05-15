@@ -49,6 +49,23 @@ export async function GET(req: NextRequest) {
             },
           },
         },
+        teacher: {
+          include: {
+            school: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            classRoom: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        school: true,
       },
     });
 
@@ -63,6 +80,21 @@ export async function GET(req: NextRequest) {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
+        school: user.school
+          ? {
+              id: user.school.id,
+              name: user.school.name,
+              shortCode: user.school.shortCode,
+              logoUrl: user.school.logoUrl,
+              bannerUrl: user.school.bannerUrl,
+              theme: user.school.theme,
+            }
+          : user.teacher?.school
+          ? {
+              id: user.teacher.school.id,
+              name: user.teacher.school.name,
+            }
+          : null,
         student: user.student
           ? {
               id: user.student.id,

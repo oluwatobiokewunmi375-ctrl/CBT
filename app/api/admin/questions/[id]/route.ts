@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const decoded = verifyToken(token)
-    if (!decoded || !["ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
@@ -46,7 +46,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     }
 
     const decoded = verifyToken(token)
-    if (!decoded || !["ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || !["ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -46,6 +46,17 @@ export async function GET(req: NextRequest) {
       if (!teacher || exam.createdById !== teacher.id) {
         return NextResponse.json(
           { error: "Unauthorized - you can only view results for your own exams" },
+          { status: 403 }
+        );
+      }
+    }
+    if (decoded.role === "SCHOOL_ADMIN") {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      }) as { schoolId?: string } | null;
+      if (!user?.schoolId || user.schoolId !== exam.schoolId) {
+        return NextResponse.json(
+          { error: "Unauthorized - school admin can only view results for their school" },
           { status: 403 }
         );
       }

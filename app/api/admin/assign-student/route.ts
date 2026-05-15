@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || !["ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }

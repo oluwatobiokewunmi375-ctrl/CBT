@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
             },
           },
           school: true,
-          classRoom: true,
+          ClassRoom: true,
         },
       });
 
@@ -51,15 +51,16 @@ export async function POST(req: NextRequest) {
           student: {
             include: {
               school: true,
-              classRoom: true,
+              ClassRoom: true,
             },
           },
           teacher: {
             include: {
               school: true,
-              classRoom: true,
+              ClassRoom: true,
             },
           },
+          school: true,
         },
       });
 
@@ -93,6 +94,32 @@ export async function POST(req: NextRequest) {
       { expiresIn: "7d" }
     );
 
+    const schoolData = student?.school
+      ? {
+          id: student.school.id,
+          name: student.school.name,
+          logoUrl: student.school.logoUrl,
+          bannerUrl: student.school.bannerUrl,
+          theme: student.school.theme,
+        }
+      : user.school
+      ? {
+          id: user.school.id,
+          name: user.school.name,
+          logoUrl: user.school.logoUrl,
+          bannerUrl: user.school.bannerUrl,
+          theme: user.school.theme,
+        }
+      : user.teacher?.school
+      ? {
+          id: user.teacher.school.id,
+          name: user.teacher.school.name,
+          logoUrl: user.teacher.school.logoUrl,
+          bannerUrl: user.teacher.school.bannerUrl,
+          theme: user.teacher.school.theme,
+        }
+      : null;
+
     return NextResponse.json({
       success: true,
       token,
@@ -101,6 +128,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
+        school: schoolData,
         student: student
           ? {
               id: student.id,

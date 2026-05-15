@@ -10,14 +10,22 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || !["ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(decoded.role)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
       );
     }
 
-    const { name, schoolId, subjectIds } = await req.json();
+    const parsed = await req.json();
+    let { name, schoolId, subjectIds } = parsed;
+
+    if (!schoolId && decoded.role === "SCHOOL_ADMIN") {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      }) as { schoolId?: string } | null;
+      schoolId = user?.schoolId || schoolId;
+    }
 
     if (!name || !schoolId) {
       return NextResponse.json(
@@ -74,14 +82,22 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || !["ADMIN", "SUPER_ADMIN", "TEACHER", "STUDENT"].includes(decoded.role)) {
+    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER", "STUDENT"].includes(decoded.role)) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
       );
     }
 
-    const { schoolId } = Object.fromEntries(new URL(req.url).searchParams);
+    const query = Object.fromEntries(new URL(req.url).searchParams);
+    let schoolId = query.schoolId;
+
+    if (!schoolId) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+      }) as { schoolId?: string } | null;
+      schoolId = user?.schoolId || undefined;
+    }
 
     if (!schoolId) {
       return NextResponse.json(

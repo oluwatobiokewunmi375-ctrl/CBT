@@ -85,7 +85,7 @@ export default function SignupPage() {
         toast.success('Account created! Logging you in...')
       }
 
-      localStorage.setItem('authToken', data.token || '')
+      localStorage.setItem('token', data.token || '')
       localStorage.setItem('user', JSON.stringify(data.user))
 
       if (role === 'SCHOOL_ADMIN') {

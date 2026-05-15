@@ -14,14 +14,40 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // If admin, return all results with full details
-    if (["ADMIN", "SUPER_ADMIN"].includes(decoded.role)) {
+    // If admin or school admin, return results with full details
+    if (["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(decoded.role)) {
+      if (decoded.role === "SCHOOL_ADMIN") {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+        }) as { schoolId?: string } | null;
+        const results = await prisma.result.findMany({
+          where: { schoolId: user?.schoolId ?? undefined },
+          include: {
+            student: {
+              include: {
+                user: true,
+                ClassRoom: true,
+                school: true,
+              },
+            },
+            exam: {
+              include: {
+                subject: true,
+              },
+            },
+            school: true,
+          },
+          orderBy: { createdAt: "desc" },
+        });
+        return NextResponse.json({ success: true, results });
+      }
+
       const results = await prisma.result.findMany({
         include: {
           student: {
             include: {
               user: true,
-              classRoom: true,
+              ClassRoom: true,
               school: true,
             },
           },
