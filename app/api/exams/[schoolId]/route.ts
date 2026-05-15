@@ -71,7 +71,7 @@ export async function POST(request: Request, { params }: { params: { schoolId: s
     }
 
     const teacher = await prisma.teacher.findUnique({
-      where: { userId: auth.id },
+      where: { userId: auth.userId },
     })
 
     if (!teacher) {
