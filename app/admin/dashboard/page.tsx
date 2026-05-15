@@ -65,7 +65,8 @@ export default function AdminDashboardPage() {
   const fetchStudents = async () => {
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch("/api/admin/students?schoolId=test-school-id", {
+      if (!token) return
+      const res = await fetch("/api/admin/students", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -81,7 +82,8 @@ export default function AdminDashboardPage() {
   const fetchTeachers = async () => {
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch("/api/admin/teachers?schoolId=test-school-id", {
+      if (!token) return
+      const res = await fetch("/api/admin/teachers", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -97,7 +99,8 @@ export default function AdminDashboardPage() {
   const fetchClassrooms = async () => {
     try {
       const token = localStorage.getItem("token")
-      const res = await fetch("/api/admin/classrooms?schoolId=test-school-id", {
+      if (!token) return
+      const res = await fetch("/api/admin/classrooms", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -113,6 +116,8 @@ export default function AdminDashboardPage() {
   const createStudent = async () => {
     try {
       const token = localStorage.getItem("token")
+      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
+      const parsedUser = rawUser ? JSON.parse(rawUser) : null
       const res = await fetch("/api/admin/students", {
         method: "POST",
         headers: {
@@ -121,7 +126,7 @@ export default function AdminDashboardPage() {
         },
         body: JSON.stringify({
           ...newStudent,
-          schoolId: "test-school-id", // In production, get from user context
+          schoolId: parsedUser?.school?.id,
         }),
       })
 
@@ -141,6 +146,8 @@ export default function AdminDashboardPage() {
   const createTeacher = async () => {
     try {
       const token = localStorage.getItem("token")
+      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
+      const parsedUser = rawUser ? JSON.parse(rawUser) : null
       const res = await fetch("/api/admin/teachers", {
         method: "POST",
         headers: {
@@ -149,7 +156,7 @@ export default function AdminDashboardPage() {
         },
         body: JSON.stringify({
           ...newTeacher,
-          schoolId: "test-school-id", // In production, get from user context
+          schoolId: parsedUser?.school?.id,
         }),
       })
 
@@ -169,6 +176,8 @@ export default function AdminDashboardPage() {
   const createClassroom = async () => {
     try {
       const token = localStorage.getItem("token")
+      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
+      const parsedUser = rawUser ? JSON.parse(rawUser) : null
       const res = await fetch("/api/admin/classrooms", {
         method: "POST",
         headers: {
@@ -177,7 +186,7 @@ export default function AdminDashboardPage() {
         },
         body: JSON.stringify({
           ...newClassroom,
-          schoolId: "test-school-id", // In production, get from user context
+          schoolId: parsedUser?.school?.id,
         }),
       })
 

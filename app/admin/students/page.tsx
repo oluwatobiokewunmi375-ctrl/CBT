@@ -8,12 +8,8 @@ import { Trash2, Edit2, Plus, Loader2, Download } from 'lucide-react'
 export default function AdminStudentsPage() {
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
-  const [filteredStudents, setFilteredStudents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,6 +19,7 @@ export default function AdminStudentsPage() {
     dob: '',
     gender: '',
   })
+  const [classrooms, setClassrooms] = useState<any[]>([])
 
   const [classrooms, setClassrooms] = useState<any[]>([])
 
@@ -30,15 +27,6 @@ export default function AdminStudentsPage() {
     fetchStudents()
     fetchClassrooms()
   }, [])
-
-  useEffect(() => {
-    const filtered = students.filter(s =>
-      s.user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.studentNo?.includes(searchTerm) ||
-      s.user?.email?.includes(searchTerm)
-    )
-    setFilteredStudents(filtered)
-  }, [students, searchTerm])
 
   const fetchStudents = async () => {
     try {
@@ -48,28 +36,19 @@ export default function AdminStudentsPage() {
         return
       }
 
-      // Mock fetch - in production this would call /api/admin/students
-      const mockStudents = [
-        {
-          id: '1',
-          user: { id: 'u1', fullName: 'John Doe', email: 'john@test.com' },
-          studentNo: '0001',
-          classRoom: { id: 'c1', name: 'SS1A' },
-          school: { id: 's1', name: 'Test School' },
-          dob: '2007-05-15',
-          gender: 'Male'
+      const res = await fetch('/api/admin/students', {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          id: '2',
-          user: { id: 'u2', fullName: 'Jane Smith', email: 'jane@test.com' },
-          studentNo: '0002',
-          classRoom: { id: 'c1', name: 'SS1A' },
-          school: { id: 's1', name: 'Test School' },
-          dob: '2007-08-20',
-          gender: 'Female'
-        }
-      ]
-      setStudents(mockStudents)
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setStudents(data.students || [])
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to load students')
+      }
     } catch (err) {
       toast.error('Failed to load students')
     } finally {
@@ -79,12 +58,22 @@ export default function AdminStudentsPage() {
 
   const fetchClassrooms = async () => {
     try {
-      const mockClassrooms = [
-        { id: 'c1', name: 'SS1A' },
-        { id: 'c2', name: 'SS1B' },
-        { id: 'c3', name: 'SS2A' }
-      ]
-      setClassrooms(mockClassrooms)
+      const token = localStorage.getItem('token')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      const res = await fetch('/api/admin/classrooms', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setClassrooms(data.classRooms || [])
+      }
     } catch (err) {
       console.error('Failed to load classrooms:', err)
     }
@@ -99,26 +88,23 @@ export default function AdminStudentsPage() {
         return
       }
 
-      const url = editingId
-        ? `/api/students/${editingId}`
-        : '/api/auth/register'
-      const method = editingId ? 'PUT' : 'POST'
+      const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+      const parsedUser = rawUser ? JSON.parse(rawUser) : null
 
-      const res = await fetch(url, {
-        method,
+      const res = await fetch('/api/admin/students', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
-          role: 'STUDENT',
-          schoolCode: 'TEST_SCHOOL',
+          schoolId: parsedUser?.school?.id,
         }),
       })
 
       if (res.ok) {
-        toast.success(editingId ? 'Student updated' : 'Student created')
+        toast.success('Student created')
         setShowForm(false)
         setFormData({
           email: '',
@@ -129,50 +115,16 @@ export default function AdminStudentsPage() {
           dob: '',
           gender: '',
         })
-        setEditingId(null)
         fetchStudents()
       } else {
-        toast.error('Failed to save student')
+        const err = await res.json()
+        toast.error(err.error || 'Failed to save student')
       }
     } catch (err) {
       toast.error('Error saving student')
     }
   }
 
-  const handleDelete = async (studentId: string) => {
-    if (!confirm('Are you sure you want to delete this student?')) return
-
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/students/${studentId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (res.ok) {
-        toast.success('Student deleted')
-        fetchStudents()
-      } else {
-        toast.error('Failed to delete student')
-      }
-    } catch (err) {
-      toast.error('Error deleting student')
-    }
-  }
-
-  const handleEdit = (student: any) => {
-    setFormData({
-      email: student.user?.email || '',
-      password: '',
-      fullName: student.user?.fullName || '',
-      studentNo: student.studentNo || '',
-      classRoomId: student.classRoom?.id || '',
-      dob: student.dob || '',
-      gender: student.gender || '',
-    })
-    setEditingId(student.id)
-    setShowForm(true)
-  }
 
   if (loading) {
     return (
@@ -202,7 +154,6 @@ export default function AdminStudentsPage() {
                 dob: '',
                 gender: '',
               })
-              setEditingId(null)
               setShowForm(true)
             }}
             className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
@@ -210,17 +161,6 @@ export default function AdminStudentsPage() {
             <Plus className="w-5 h-5" />
             Add Student
           </button>
-        </div>
-
-        {/* Search */}
-        <div className="mb-8">
-          <input
-            type="text"
-            placeholder="Search by name, student ID, or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
-          />
         </div>
 
         {/* Stats */}
@@ -241,11 +181,9 @@ export default function AdminStudentsPage() {
 
         {/* Students Table */}
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700 rounded-xl overflow-hidden">
-          {filteredStudents.length === 0 ? (
+          {students.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-slate-400 text-lg">
-                {students.length === 0 ? 'No students yet. Add one to get started.' : 'No students match your search.'}
-              </p>
+              <p className="text-slate-400 text-lg">No students yet. Add one to get started.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -257,33 +195,16 @@ export default function AdminStudentsPage() {
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Email</th>
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Class</th>
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Gender</th>
-                    <th className="px-6 py-4 text-left text-slate-300 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredStudents.map((student, idx) => (
+                  {students.map((student, idx) => (
                     <tr key={student.id} className={idx % 2 === 0 ? 'bg-slate-700/20' : 'bg-slate-700/10'}>
                       <td className="px-6 py-4 text-white font-medium">{student.user?.fullName}</td>
                       <td className="px-6 py-4 text-slate-300">{student.studentNo}</td>
                       <td className="px-6 py-4 text-slate-400">{student.user?.email}</td>
                       <td className="px-6 py-4 text-slate-300">{student.classRoom?.name || 'Unassigned'}</td>
                       <td className="px-6 py-4 text-slate-300">{student.gender || '-'}</td>
-                      <td className="px-6 py-4 flex gap-2">
-                        <button
-                          onClick={() => handleEdit(student)}
-                          className="p-2 hover:bg-slate-600 rounded transition text-blue-400"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(student.id)}
-                          className="p-2 hover:bg-slate-600 rounded transition text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -298,9 +219,7 @@ export default function AdminStudentsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                {editingId ? 'Edit Student' : 'Add New Student'}
-              </h2>
+              <h2 className="text-2xl font-bold text-white">Add New Student</h2>
               <button
                 onClick={() => setShowForm(false)}
                 className="text-slate-400 hover:text-white"
@@ -336,20 +255,18 @@ export default function AdminStudentsPage() {
                 />
               </div>
 
-              {!editingId && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -402,7 +319,7 @@ export default function AdminStudentsPage() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                 >
-                  {editingId ? 'Update' : 'Create'}
+                  Create
                 </button>
                 <button
                   type="button"

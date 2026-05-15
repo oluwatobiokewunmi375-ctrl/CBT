@@ -24,6 +24,7 @@ export default function StudentDashboard() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [exams, setExams] = useState<Exam[]>([])
+  const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     completed: 0,
@@ -33,60 +34,94 @@ export default function StudentDashboard() {
   })
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (!userData) {
+    const storedUser = localStorage.getItem('user')
+    const token = localStorage.getItem('token')
+
+    if (!storedUser || !token) {
       router.push('/login')
       return
     }
-    
-    setUser(JSON.parse(userData))
-    fetchExams()
+
+    const parsedUser = JSON.parse(storedUser)
+    setUser(parsedUser)
+
+    const schoolId = parsedUser?.school?.id
+    if (!schoolId) {
+      toast.error('School context missing for exam discovery')
+      setLoading(false)
+      return
+    }
+
+    const loadData = async () => {
+      try {
+        const [examList, resultList] = await Promise.all([
+          fetchExams(schoolId, token),
+          fetchResults(token),
+        ])
+
+        const attemptedExamIds = new Set(resultList.map((result: any) => result.examId))
+        const publishedExams = examList.filter((exam: Exam) => exam.status === 'PUBLISHED')
+
+        setStats({
+          completed: attemptedExamIds.size,
+          pending: publishedExams.filter((exam) => !attemptedExamIds.has(exam.id)).length,
+          passed: resultList.filter((result: any) => result.percentage >= 50).length,
+          avgScore:
+            resultList.length > 0
+              ? resultList.reduce((sum: number, result: any) => sum + (result.percentage || 0), 0) /
+                resultList.length
+              : 0,
+        })
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [router])
 
-  const fetchExams = async () => {
+  const fetchExams = async (schoolId: string, token: string) => {
     try {
-      // This would call your actual API
-      // For now, we'll use mock data
-      setExams([
-        {
-          id: '1',
-          title: 'Mathematics Final Exam',
-          subject: { name: 'Mathematics' },
-          class: { name: 'SS3A' },
-          duration: 120,
-          totalQuestions: 50,
-          totalMarks: 100,
-          status: 'PUBLISHED',
-          startTime: new Date().toISOString(),
-          endTime: new Date(Date.now() + 86400000).toISOString(),
-          _count: { results: 45 },
-        },
-        {
-          id: '2',
-          title: 'English Language CBT',
-          subject: { name: 'English' },
-          class: { name: 'SS3A' },
-          duration: 90,
-          totalQuestions: 40,
-          totalMarks: 80,
-          status: 'PUBLISHED',
-          startTime: new Date().toISOString(),
-          endTime: new Date(Date.now() + 86400000).toISOString(),
-          _count: { results: 42 },
-        },
-      ])
-
-      setStats({
-        completed: 15,
-        pending: 3,
-        passed: 12,
-        avgScore: 78.5,
+      const res = await fetch(`/api/exams/${schoolId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
+
+      if (!res.ok) {
+        throw new Error('Failed to load exams')
+      }
+
+      const data = await res.json()
+      const exams = data?.data || []
+      setExams(exams)
+      return exams
     } catch (error) {
       console.error(error)
       toast.error('Failed to load exams')
-    } finally {
-      setLoading(false)
+      return []
+    }
+  }
+
+  const fetchResults = async (token: string) => {
+    try {
+      const res = await fetch('/api/results/list', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to load results')
+      }
+
+      const data = await res.json()
+      const results = data?.results || []
+      setResults(results)
+      return results
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load results')
+      return []
     }
   }
 

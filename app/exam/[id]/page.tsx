@@ -216,7 +216,7 @@ export default function ExamPage() {
               {/* Question */}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  {question.text}
+                  {question.content || question.text}
                 </h2>
 
                 {/* Options */}

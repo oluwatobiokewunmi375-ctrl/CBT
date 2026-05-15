@@ -82,6 +82,12 @@ export async function POST(req: NextRequest) {
       student = user.student || null;
     }
 
+    const schoolId =
+      student?.school?.id ||
+      user.school?.id ||
+      user.teacher?.school?.id ||
+      null;
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -89,6 +95,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
         studentId: student?.id,
         teacherId: user.teacher?.id,
+        schoolId,
       },
       JWT_SECRET,
       { expiresIn: "7d" }

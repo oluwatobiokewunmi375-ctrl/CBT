@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
         studentId: student?.id,
         teacherId: teacher?.id,
+        schoolId: school?.id,
       },
       JWT_SECRET,
       { expiresIn: "7d" }

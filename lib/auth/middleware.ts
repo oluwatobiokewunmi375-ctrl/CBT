@@ -11,6 +11,7 @@ export function verifyToken(token: string) {
       role: decoded.role,
       studentId: decoded.studentId,
       teacherId: decoded.teacherId,
+      schoolId: decoded.schoolId,
     };
   } catch (error) {
     return null;
