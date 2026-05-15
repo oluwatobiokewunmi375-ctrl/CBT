@@ -19,8 +19,11 @@ export default function ExamPage() {
   useEffect(() => {
     const fetchExam = async () => {
       try {
-        
-        
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        if (!token) {
+          router.push('/login')
+          return
+        }
 
         const res = await fetch(`/api/exam/${examId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -82,6 +85,11 @@ export default function ExamPage() {
 
   const handleSubmit = useCallback(async () => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) {
+        router.push('/login')
+        return
+      }
       
       const formattedAnswers: Record<string, string> = {}
 

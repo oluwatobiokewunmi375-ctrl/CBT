@@ -14,7 +14,30 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Get student results
+    // If admin, return all results with full details
+    if (["ADMIN", "SUPER_ADMIN"].includes(decoded.role)) {
+      const results = await prisma.result.findMany({
+        include: {
+          student: {
+            include: {
+              user: true,
+              classRoom: true,
+              school: true,
+            },
+          },
+          exam: {
+            include: {
+              subject: true,
+            },
+          },
+          school: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json({ success: true, results });
+    }
+
+    // If student, return only their results
     const student = await prisma.student.findUnique({
       where: { userId: decoded.userId },
     });
@@ -34,8 +57,15 @@ export async function GET(req: NextRequest) {
             id: true,
             title: true,
             totalMarks: true,
+            subject: true,
           },
         },
+        student: {
+          include: {
+            ClassRoom: true,
+          },
+        },
+        school: true,
       },
       orderBy: { createdAt: "desc" },
     });
