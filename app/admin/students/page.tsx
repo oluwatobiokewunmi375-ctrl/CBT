@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { Trash2, Edit2, Plus, Loader2, Download } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
 
 export default function AdminStudentsPage() {
   const router = useRouter()
@@ -19,8 +19,6 @@ export default function AdminStudentsPage() {
     dob: '',
     gender: '',
   })
-  const [classrooms, setClassrooms] = useState<any[]>([])
-
   const [classrooms, setClassrooms] = useState<any[]>([])
 
   useEffect(() => {

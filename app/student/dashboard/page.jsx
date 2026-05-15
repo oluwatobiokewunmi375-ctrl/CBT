@@ -38,12 +38,16 @@ export default function StudentDashboard() {
           setResults(resultsData.results || [])
         }
 
-        // Fetch available exams (simplified - in production you'd have a dedicated endpoint)
-        const examsRes = await fetch("/api/exams/list")
+        const schoolId = profileData.profile.student?.school?.id
+        if (schoolId) {
+          const examsRes = await fetch(`/api/exams/${schoolId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
 
-        if (examsRes.ok) {
-          const examsData = await examsRes.json()
-          setUpcomingExams(examsData.exams || [])
+          if (examsRes.ok) {
+            const examsData = await examsRes.json()
+            setUpcomingExams(examsData.data || [])
+          }
         }
 
       } catch (err) {
