@@ -42,6 +42,19 @@ export default function Navbar() {
             <Link href="/results" className="text-gray-300 hover:text-white transition">
               Results
             </Link>
+            <Link href="/support" className="text-gray-300 hover:text-white transition">
+              Support
+            </Link>
+            {user?.role === 'SUPER_ADMIN' && (
+              <Link href="/admin/users" className="text-gray-300 hover:text-white transition">
+                Admins
+              </Link>
+            )}
+            {user?.role === 'SCHOOL_ADMIN' && (
+              <Link href="/school/admins" className="text-gray-300 hover:text-white transition">
+                School Admins
+              </Link>
+            )}
           </div>
 
           {/* Status & User Menu */}
@@ -106,6 +119,13 @@ export default function Navbar() {
             >
               Results
             </Link>
+            <Link href="/support" className="block px-4 py-2 text-gray-300 hover:bg-slate-700 rounded-lg transition">Support</Link>
+              {user?.role === 'SUPER_ADMIN' && (
+                <Link href="/admin/users" className="block px-4 py-2 text-gray-300 hover:bg-slate-700 rounded-lg transition">Admins</Link>
+              )}
+              {user?.role === 'SCHOOL_ADMIN' && (
+                <Link href="/school/admins" className="block px-4 py-2 text-gray-300 hover:bg-slate-700 rounded-lg transition">School Admins</Link>
+              )}
           </div>
         </div>
       )}

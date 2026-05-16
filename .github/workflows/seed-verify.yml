@@ -1,0 +1,65 @@
+name: Seed and Verify
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  seed-verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cbt
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cbt"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure environment
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5433/cbt" >> $GITHUB_ENV
+          echo "JWT_SECRET=ci-jwt-secret" >> $GITHUB_ENV
+          echo "NEXTAUTH_URL=http://localhost:3000" >> $GITHUB_ENV
+
+      - name: Apply Prisma schema
+        run: npx prisma db push
+
+      - name: Seed mock accounts
+        run: npm run seed:mock
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Start app in background
+        run: npm run start &
+
+      - name: Wait for server
+        run: |
+          for i in {1..30}; do
+            if curl -sS http://localhost:3000 > /dev/null; then
+              echo "server ready"; exit 0;
+            fi; sleep 1; done; echo "server failed to start"; exit 1
+
+      - name: Verify seeded logins
+        run: npm run verify:seed

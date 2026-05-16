@@ -32,7 +32,10 @@
     "test:all": "npm run test && npm run test:e2e",
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "seed:mock": "node scripts/create-mock-accounts.cjs"
+    ,
+    "verify:seed": "node --enable-source-maps scripts/verify-seed.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
