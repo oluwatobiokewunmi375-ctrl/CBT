@@ -42,6 +42,21 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     const normalizedRole = (role || "STUDENT").toUpperCase();
+    const allowedRoles = [
+      "STUDENT",
+      "TEACHER",
+      "ADMIN",
+      "SCHOOL_ADMIN",
+      "SUPER_ADMIN",
+    ];
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      return NextResponse.json(
+        { error: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     if (!email || !password || !fullName) {
       return NextResponse.json(
         { error: "Email, password, and fullName required" },
@@ -50,15 +65,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (
-      normalizedRole === "SUPER_ADMIN" ||
-      normalizedRole === "ADMIN"
+      ["SUPER_ADMIN", "ADMIN", "SCHOOL_ADMIN"].includes(normalizedRole) &&
+      !isSuperAdmin
     ) {
-      if (!isSuperAdmin) {
-        return NextResponse.json(
-          { error: "Unauthorized to create this type of account" },
-          { status: 403 }
-        );
-      }
+      return NextResponse.json(
+        { error: "Unauthorized to create this type of account" },
+        { status: 403 }
+      );
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -84,13 +97,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (normalizedRole === "STUDENT" || normalizedRole === "TEACHER") {
+    if (["STUDENT", "TEACHER"].includes(normalizedRole)) {
       if (!school) {
         return NextResponse.json(
           { error: "School code is required for student and teacher registration" },
           { status: 400 }
         );
       }
+    }
+
+    if (["ADMIN", "SCHOOL_ADMIN"].includes(normalizedRole) && !school) {
+      return NextResponse.json(
+        { error: "School code is required for admin and school admin registration" },
+        { status: 400 }
+      );
     }
 
     let classRoom = null;

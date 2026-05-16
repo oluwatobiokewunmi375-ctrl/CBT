@@ -54,13 +54,14 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await hash(password, 12);
 
-    // Create user with ADMIN role
+    // Create user with SCHOOL_ADMIN role and assign to the specified school
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         fullName,
-        role: "ADMIN",
+        role: "SCHOOL_ADMIN",
+        schoolId: school.id,
       },
     });
 
@@ -103,12 +104,13 @@ export async function GET(req: NextRequest) {
     }
 
     const admins = await prisma.user.findMany({
-      where: { role: "ADMIN" },
+      where: { role: { in: ["ADMIN", "SCHOOL_ADMIN"] } },
       select: {
         id: true,
         email: true,
         fullName: true,
         role: true,
+        schoolId: true,
         createdAt: true,
       },
     });

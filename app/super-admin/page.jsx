@@ -7,6 +7,7 @@ export default function SuperAdmin() {
   const [admins, setAdmins] = useState([])
   const [schoolName, setSchoolName] = useState("")
   const [schoolCode, setSchoolCode] = useState("")
+  const [selectedSchoolId, setSelectedSchoolId] = useState("")
   const [adminEmail, setAdminEmail] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
   const [adminFullName, setAdminFullName] = useState("")
@@ -24,6 +25,9 @@ export default function SuperAdmin() {
       if (res.ok) {
         const data = await res.json()
         setSchools(data.schools || [])
+        if (!selectedSchoolId && data.schools && data.schools.length > 0) {
+          setSelectedSchoolId(data.schools[0].id)
+        }
       }
     } catch (error) {
       console.error("Failed to fetch schools:", error)
@@ -94,6 +98,7 @@ export default function SuperAdmin() {
           email: adminEmail,
           password: adminPassword,
           fullName: adminFullName,
+          schoolId: selectedSchoolId,
         }),
       })
 
@@ -305,6 +310,25 @@ export default function SuperAdmin() {
                 width: 200
               }}
             />
+
+            <select
+              value={selectedSchoolId}
+              onChange={e => setSelectedSchoolId(e.target.value)}
+              style={{
+                padding: 10,
+                marginRight: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+                width: 200
+              }}
+            >
+              <option value="">Select School</option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name} ({school.shortCode})
+                </option>
+              ))}
+            </select>
 
             <button
               onClick={createAdmin}
