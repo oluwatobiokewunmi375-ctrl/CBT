@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { Plus, Loader2, Trash } from 'lucide-react'
 
@@ -21,7 +22,7 @@ export default function AdminUsersPage() {
   const fetchAdmins = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch('/api/admin/admins', {
         headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +62,7 @@ export default function AdminUsersPage() {
     e.preventDefault()
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch('/api/admin/admins', {
         method: 'POST',
@@ -87,7 +88,7 @@ export default function AdminUsersPage() {
     if (!confirm('Delete this admin?')) return
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch(`/api/admin/admins/${id}`, {
         method: 'DELETE',

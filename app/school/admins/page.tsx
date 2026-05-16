@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
 
@@ -20,7 +21,7 @@ export default function SchoolAdminsPage() {
   const fetchAdmins = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch('/api/school/admins', {
         headers: { Authorization: `Bearer ${token}` },
@@ -53,7 +54,7 @@ export default function SchoolAdminsPage() {
 
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch('/api/school/admins', {
         method: 'POST',
@@ -80,7 +81,7 @@ export default function SchoolAdminsPage() {
     if (!confirm('Delete this admin?')) return
     try {
       const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
+      if (!token) return safeNavigate(router, '/login')
 
       const res = await fetch(`/api/school/admins/${id}`, {
         method: 'DELETE',

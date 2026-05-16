@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 
 export default function AdminExamsPage() {
@@ -13,7 +14,7 @@ export default function AdminExamsPage() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     if (!token) {
-      router.push('/login')
+      safeNavigate(router, '/login')
       return
     }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { safeNavigate } from '../../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { jsPDF } from 'jspdf'
 
@@ -16,7 +17,7 @@ export default function ExamResultPage() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     if (!token) {
-      router.push('/login')
+      safeNavigate(router, '/login')
       return
     }
 
@@ -101,7 +102,7 @@ export default function ExamResultPage() {
         <div className="max-w-xl rounded-3xl border border-red-700 bg-red-950/80 p-8 text-center">
           <p>{error}</p>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => safeNavigate(router, '/dashboard')}
             className="mt-6 rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
           >
             Back to dashboard

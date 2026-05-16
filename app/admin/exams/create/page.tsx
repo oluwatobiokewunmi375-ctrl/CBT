@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { safeNavigate } from "../../../../lib/safeNavigate"
 import Link from "next/link"
 
 interface Question {
@@ -89,7 +90,7 @@ export default function CreateExamPage() {
     try {
       const token = localStorage.getItem("token")
       if (!token) {
-        router.push("/login")
+        safeNavigate(router, "/login")
         return
       }
 
@@ -115,10 +116,16 @@ export default function CreateExamPage() {
 
       if (res.ok) {
         const data = await res.json()
-        router.push(`/admin/exams/${data.exam.id}`)
+        safeNavigate(router, `/admin/exams/${data.exam.id}`)
       } else {
         const errorData = await res.json()
-        setError(errorData.error || "Failed to create exam")
+        // if backend indicates teacher is missing, navigate to admin dashboard
+        if (errorData?.error === "Teacher not found") {
+          safeNavigate(router, "/admin/dashboard")
+          setError("Teacher not found. Redirecting to dashboard to create teachers.")
+        } else {
+          setError(errorData.error || "Failed to create exam")
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creating exam")

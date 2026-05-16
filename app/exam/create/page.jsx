@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 
 export default function CreateExam() {
   const router = useRouter()
@@ -10,14 +11,14 @@ export default function CreateExam() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     if (!token) {
-      router.push('/login')
+      safeNavigate(router, '/login')
       return
     }
 
-    setTimeout(() => {
-      setRedirected(true)
-      router.push('/admin/exams/create')
-    }, 100)
+      setTimeout(() => {
+        setRedirected(true)
+        safeNavigate(router, '/admin/exams/create')
+      }, 100)
   }, [router])
 
   return (
@@ -26,7 +27,7 @@ export default function CreateExam() {
         <h1 className="text-3xl font-semibold mb-4">Create Exam</h1>
         <p className="text-slate-400 mb-6">Redirecting to the exam creation page for authorized users...</p>
         {redirected ? (
-          <p className="text-slate-300">If you are not redirected, please <button onClick={() => router.push('/admin/exams/create')} className="font-semibold text-cyan-300 hover:text-cyan-200">click here</button>.</p>
+          <p className="text-slate-300">If you are not redirected, please <button onClick={() => safeNavigate(router, '/admin/exams/create')} className="font-semibold text-cyan-300 hover:text-cyan-200">click here</button>.</p>
         ) : (
           <p className="text-slate-500">Preparing the exam creation workspace...</p>
         )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { safeNavigate } from '../../../../lib/safeNavigate'
 import toast from "react-hot-toast"
 
 export default function ExamPage() {
@@ -22,7 +23,7 @@ export default function ExamPage() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
       if (!token) {
-        router.push("/login")
+        safeNavigate(router, "/login")
         return
       }
 
@@ -50,7 +51,7 @@ export default function ExamPage() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
       if (!token) {
-        router.push("/login")
+        safeNavigate(router, "/login")
         return
       }
 
@@ -87,7 +88,7 @@ export default function ExamPage() {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
         if (!token) {
-          router.push("/login")
+          safeNavigate(router, "/login")
           return
         }
 
@@ -214,7 +215,7 @@ export default function ExamPage() {
         <div className="text-center">
           <div className="text-red-600 mb-4">{error}</div>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => safeNavigate(router, "/dashboard")}
             className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
           >
             Back to Dashboard
