@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { LogOut, BookOpen, Clock, CheckCircle, AlertCircle, TrendingUp, FileText } from 'lucide-react'
 
@@ -38,7 +39,7 @@ export default function StudentDashboard() {
     const token = localStorage.getItem('token')
 
     if (!storedUser || !token) {
-      router.push('/login')
+      safeNavigate(router, '/login')
       return
     }
 
@@ -129,7 +130,7 @@ export default function StudentDashboard() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     toast.success('Logged out successfully')
-    router.push('/')
+    safeNavigate(router, '/')
   }
 
   if (!user) return null

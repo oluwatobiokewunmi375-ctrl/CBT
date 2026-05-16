@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { safeNavigate } from '../../../lib/safeNavigate'
 
 export default function StudentDashboard() {
   const router = useRouter()
@@ -17,7 +18,7 @@ export default function StudentDashboard() {
       try {
         const token = localStorage.getItem("token")
         if (!token) {
-          router.push("/login")
+          safeNavigate(router, "/login")
           return
         }
 
@@ -91,7 +92,7 @@ export default function StudentDashboard() {
             <button
               onClick={() => {
                 localStorage.removeItem("token")
-                router.push("/login")
+                safeNavigate(router, "/login")
               }}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
             >

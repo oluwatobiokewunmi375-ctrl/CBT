@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { Plus, Loader2 } from 'lucide-react'
 
@@ -30,7 +31,7 @@ export default function AdminStudentsPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/login')
+        safeNavigate(router, '/login')
         return
       }
 
@@ -58,7 +59,7 @@ export default function AdminStudentsPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/login')
+        safeNavigate(router, '/login')
         return
       }
 
@@ -82,7 +83,7 @@ export default function AdminStudentsPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/login')
+        safeNavigate(router, '/login')
         return
       }
 

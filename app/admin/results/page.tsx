@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 import { Download, Printer, Eye, Loader2 } from 'lucide-react'
 
@@ -34,7 +35,7 @@ export default function AdminResultsPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        router.push('/login')
+        safeNavigate(router, '/login')
         return
       }
 
