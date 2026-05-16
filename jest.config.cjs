@@ -1,13 +1,19 @@
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
+  preset: 'ts-jest/presets/default-esm',
+  testEnvironment: 'node',
   setupFilesAfterEnv: [
-    "<rootDir>/jest.setup.ts",
-    "<rootDir>/tests/setup/resetState.ts"
+    '<rootDir>/jest.setup.ts',
+    '<rootDir>/tests/setup/resetState.ts'
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.[tj]sx?$': ['ts-jest', {
+      useESM: true,
+      tsconfig: 'tsconfig.json',
+      diagnostics: false
+    }]
   },
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/$1'

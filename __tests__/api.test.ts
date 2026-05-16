@@ -6,10 +6,127 @@
  * Watch mode: npm test -- --watch
  */
 
-// Mock database and JWT for testing
-const mockToken = "test-jwt-token"
-const mockUserId = "test-user-id"
-const mockExamId = "test-exam-id"
+let studentToken = ""
+let teacherToken = ""
+let adminToken = ""
+let existingStudentEmail = "student@demo.com"
+let existingTeacherEmail = "teacher@demo.com"
+let existingAdminEmail = "admin.demo@test.com"
+let examId = ""
+
+async function loginUser(credentials: { email: string; password: string }) {
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(credentials),
+  })
+  if (!response.ok) return null
+  const data = await response.json()
+  return data.token
+}
+
+async function createUser(role: string, email: string, password: string) {
+  const response = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password,
+      fullName: `${role} Test`,
+      role,
+      schoolCode: "DEMO",
+    }),
+  })
+  return response
+}
+
+beforeAll(async () => {
+  const studentCandidates = [
+    { email: "student@demo.com", password: "password123" },
+    { email: "student.demo@test.com", password: "Student@123" },
+  ]
+  for (const creds of studentCandidates) {
+    const token = await loginUser(creds)
+    if (token) {
+      studentToken = token
+      existingStudentEmail = creds.email
+      break
+    }
+  }
+  if (!studentToken) {
+    const email = `student+${Date.now()}@test.com`
+    const password = "password123"
+    const response = await createUser("STUDENT", email, password)
+    const data = await response.json()
+    studentToken = data.token
+    existingStudentEmail = email
+  }
+
+  const teacherCandidates = [
+    { email: "teacher@demo.com", password: "password123" },
+    { email: "teacher.demo@test.com", password: "Teacher@123" },
+  ]
+  for (const creds of teacherCandidates) {
+    const token = await loginUser(creds)
+    if (token) {
+      teacherToken = token
+      existingTeacherEmail = creds.email
+      break
+    }
+  }
+  if (!teacherToken) {
+    const email = `teacher+${Date.now()}@test.com`
+    const password = "password123"
+    const response = await createUser("TEACHER", email, password)
+    const data = await response.json()
+    teacherToken = data.token
+    existingTeacherEmail = email
+  }
+
+  if (teacherToken) {
+    const response = await fetch("/api/admin/exams", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${teacherToken}`,
+      },
+      body: JSON.stringify({
+        title: "API Test Exam",
+        description: "Generated exam for API test",
+        duration: 60,
+        totalMarks: 100,
+        questions: [
+          {
+            text: "What is 1+1?",
+            marks: 10,
+            type: "MULTIPLE_CHOICE",
+            options: [
+              { text: "1", isCorrect: false },
+              { text: "2", isCorrect: true },
+            ],
+          },
+        ],
+      }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      examId = data.exam?.id || ""
+    }
+  }
+
+  const adminCandidates = [
+    { email: "admin.demo@test.com", password: "Admin@123" },
+    { email: "admin@demo.com", password: "password123" },
+  ]
+  for (const creds of adminCandidates) {
+    const token = await loginUser(creds)
+    if (token) {
+      adminToken = token
+      existingAdminEmail = creds.email
+      break
+    }
+  }
+})
 
 describe("Authentication API", () => {
   describe("POST /api/auth/register", () => {

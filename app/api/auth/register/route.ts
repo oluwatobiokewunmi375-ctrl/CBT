@@ -6,32 +6,22 @@ import { verifyToken } from "@/lib/auth/middleware";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-// Generate school-specific student ID numbers
-async function generateStudentNo(schoolId: string): Promise<string> {
-  const studentCount = await prisma.student.count({
-    where: { schoolId },
-  });
-  const nextNumber = studentCount + 1;
-  return nextNumber.toString().padStart(4, "0");
+async function generateStudentNo(schoolId?: string): Promise<string> {
+  if (schoolId) {
+    const studentCount = await prisma.student.count({
+      where: { schoolId },
+    });
+    const nextNumber = studentCount + 1;
+    return nextNumber.toString().padStart(4, "0");
+  }
+  return `STU-${Date.now().toString().slice(-6)}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const authToken = req.headers.get("authorization")?.split(" ")[1];
-    if (!authToken) {
-      return NextResponse.json(
-        { error: "Unauthorized - login required" },
-        { status: 401 }
-      );
-    }
-
-    const decoded = verifyToken(authToken);
-    if (!decoded || decoded.role !== "SUPER_ADMIN") {
-      return NextResponse.json(
-        { error: "Unauthorized - super admin access required" },
-        { status: 403 }
-      );
-    }
+    const authToken = req.headers.get("authorization")?.split(" ")[1] || null;
+    const decoded = authToken ? verifyToken(authToken) : null;
+    const isSuperAdmin = decoded?.role === "SUPER_ADMIN";
 
     const {
       email,
@@ -51,11 +41,24 @@ export async function POST(req: NextRequest) {
       department,
     } = await req.json();
 
+    const normalizedRole = (role || "STUDENT").toUpperCase();
     if (!email || !password || !fullName) {
       return NextResponse.json(
         { error: "Email, password, and fullName required" },
         { status: 400 }
       );
+    }
+
+    if (
+      normalizedRole === "SUPER_ADMIN" ||
+      normalizedRole === "ADMIN"
+    ) {
+      if (!isSuperAdmin) {
+        return NextResponse.json(
+          { error: "Unauthorized to create this type of account" },
+          { status: 403 }
+        );
+      }
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -81,6 +84,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (normalizedRole === "STUDENT" || normalizedRole === "TEACHER") {
+      if (!school) {
+        return NextResponse.json(
+          { error: "School code is required for student and teacher registration" },
+          { status: 400 }
+        );
+      }
+    }
+
     let classRoom = null;
     if (classRoomId) {
       classRoom = await prisma.classRoom.findUnique({
@@ -100,7 +112,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         fullName,
-        role: role || "STUDENT",
+        role: normalizedRole,
         schoolId: school?.id,
       },
     });
@@ -108,12 +120,12 @@ export async function POST(req: NextRequest) {
     let student = null;
     let teacher = null;
 
-    if (user.role === "STUDENT" && school) {
-      const generatedStudentNo = await generateStudentNo(school.id);
+    if (normalizedRole === "STUDENT") {
+      const generatedStudentNo = await generateStudentNo(school?.id);
       student = await prisma.student.create({
         data: {
           userId: user.id,
-          schoolId: school.id,
+          schoolId: school?.id,
           studentNo: generatedStudentNo,
           classRoomId: classRoomId || undefined,
           dob: dob ? new Date(dob) : undefined,
@@ -131,20 +143,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (user.role === "TEACHER" && school) {
+    if (normalizedRole === "TEACHER") {
       teacher = await prisma.teacher.create({
         data: {
           userId: user.id,
-          schoolId: school.id,
+          schoolId: school?.id,
           employeeNo:
             employeeNo ||
-            `TCH-${school.shortCode}-${Date.now().toString().slice(-6)}`,
+            `TCH-${school?.shortCode ?? "GEN"}-${Date.now().toString().slice(-6)}`,
           department: department || undefined,
           classRoomId: classRoomId || undefined,
         },
         include: {
           school: true,
-          ClassRoom: true,
+          classRoom: true,
         },
       });
     }
@@ -186,7 +198,7 @@ export async function POST(req: NextRequest) {
                 id: student.id,
                 studentNo: student.studentNo,
                 school: student.school,
-                classRoom: student.classRoom,
+                classRoom: student.ClassRoom,
               }
             : null,
           teacher: teacher

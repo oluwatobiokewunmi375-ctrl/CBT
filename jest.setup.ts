@@ -1,74 +1,149 @@
-import "whatwg-fetch";
 import "@testing-library/jest-dom";
 import fs from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
+
+globalThis.Request = globalThis.Request ?? (globalThis as any).Request;
+globalThis.Response = globalThis.Response ?? (globalThis as any).Response;
+globalThis.Headers = globalThis.Headers ?? (globalThis as any).Headers;
 
 globalThis.__CBT_STATE__ = globalThis.__CBT_STATE__ ?? {
   users: new Map(),
-  tokens: new Map()
+  tokens: new Map(),
 };
 
 const originalFetch = globalThis.fetch;
+const apiRoot = path.resolve(process.cwd(), "./app/api");
 
-globalThis.fetch = async (input, init = {}) => {
-  const url = typeof input === "string" ? input : input.url;
-  try {
-    const parsed = new URL(url, "http://localhost");
-    const pathname = parsed.pathname;
-    if (!pathname.startsWith("/api")) {
-      return originalFetch(input as any, init as any);
-    }
+type RouteResult = {
+  filePath: string;
+  params: Record<string, string>;
+};
 
-    const method = (init.method || "GET").toUpperCase();
+function findApiRoute(pathname: string): RouteResult | null {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments[0] === "api") {
+    segments.shift();
+  }
 
-    const appRoot = path.resolve(process.cwd(), "./app");
-    const tryPaths = [];
-
-    // direct map: /api/foo/bar -> <appRoot>/api/foo/bar/route
-    tryPaths.push(path.join(appRoot, pathname, "route"));
-
-    // dynamic segment replacement for last segment
-    const parts = pathname.split("/").filter(Boolean);
-    if (parts.length >= 2) {
-      const replaced = parts.slice();
-      replaced[replaced.length - 1] = "[id]";
-      tryPaths.push(path.join(appRoot, "/" + replaced.join("/"), "route"));
-    }
-
-    // attempt to import any candidate by checking file existence and using file URL
-    let mod = null;
-    for (const p of tryPaths) {
-      const tsPath = p + ".ts";
-      const jsPath = p + ".js";
+  function traverse(
+    dir: string,
+    index: number,
+    params: Record<string, string>
+  ): RouteResult | null {
+    if (index === segments.length) {
+      const routeBase = path.join(dir, "route");
+      const tsPath = routeBase + ".ts";
+      const jsPath = routeBase + ".js";
       if (fs.existsSync(tsPath)) {
-        mod = await import('file://' + tsPath);
-        break;
+        return { filePath: tsPath, params };
       }
       if (fs.existsSync(jsPath)) {
-        mod = await import('file://' + jsPath);
-        break;
+        return { filePath: jsPath, params };
+      }
+      return null;
+    }
+
+    if (!fs.existsSync(dir)) {
+      return null;
+    }
+
+    const segment = segments[index];
+    const entries = fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+
+    const directMatch = entries.find((entry) => entry.name === segment);
+    if (directMatch) {
+      const result = traverse(path.join(dir, directMatch.name), index + 1, params);
+      if (result) {
+        return result;
       }
     }
 
-    if (!mod) {
-      throw new Error(`Route module not found for ${pathname}`);
+    for (const entry of entries) {
+      const match = entry.name.match(/^\[(.+)\]$/);
+      if (!match) continue;
+      const paramName = match[1];
+      const result = traverse(
+        path.join(dir, entry.name),
+        index + 1,
+        {
+          ...params,
+          [paramName]: segment,
+        }
+      );
+      if (result) {
+        return result;
+      }
     }
 
-    const req = new Request("http://localhost" + pathname + parsed.search, {
+    return null;
+  }
+
+  return traverse(apiRoot, 0, {});
+}
+
+globalThis.fetch = async (input: any, init: any = {}) => {
+  const url = typeof input === "string" ? input : input?.url;
+  if (!url) {
+    return originalFetch ? originalFetch(input as any, init as any) : new Response(null, { status: 500 });
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url, "http://localhost");
+  } catch {
+    return originalFetch ? originalFetch(input as any, init as any) : new Response(null, { status: 500 });
+  }
+
+  if (!parsed.pathname.startsWith("/api")) {
+    return originalFetch ? originalFetch(input as any, init as any) : new Response(null, { status: 500 });
+  }
+
+  try {
+    const method = ((init.method || "GET") as string).toUpperCase();
+    const route = findApiRoute(parsed.pathname);
+    if (!route) {
+      console.error("[JEST-FETCH] route not found for", parsed.pathname);
+    } else {
+      console.log("[JEST-FETCH] route found", route.filePath, route.params);
+    }
+    if (!route) {
+      return new Response(JSON.stringify({ error: `Route module not found for ${parsed.pathname}` }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    let mod: any;
+    try {
+      mod = require(route.filePath);
+    } catch {
+      mod = await import(pathToFileURL(route.filePath).href);
+    }
+
+    const handler = mod[method] || mod.default;
+    if (!handler) {
+      return new Response(JSON.stringify({ error: `Handler ${method} not found for ${parsed.pathname}` }), {
+        status: 405,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const req = new Request(parsed.toString(), {
       method,
       headers: init.headers,
       body: init.body,
     });
 
-    const handler = mod[method];
-    if (!handler) throw new Error(`Handler ${method} not found for ${pathname}`);
+    const result = await handler(req, { params: Promise.resolve(route.params) });
 
-    const result = await handler(req);
+    if (result instanceof Response) {
+      return result;
+    }
 
-    // Normalize NextResponse-like objects to standard Response
     let status = 200;
-    let body = null;
-    let headers = {};
+    let body: any = null;
+    const headers: Record<string, string> = {};
 
     if (result) {
       if (typeof result.status === "function") {
@@ -76,68 +151,31 @@ globalThis.fetch = async (input, init = {}) => {
       } else if (typeof result.status === "number") {
         status = result.status;
       }
-      // NextResponse.json stores body in result._bodyInit or result.body
+
       body = result._bodyInit ?? result.body ?? null;
+
       if (result.headers && typeof result.headers.get === "function") {
-        // convert Headers to plain object
-        headers = {};
-        result.headers.forEach((v, k) => (headers[k] = v));
+        result.headers.forEach((value: string, key: string) => {
+          headers[key] = value;
+        });
       }
     }
 
     const bodyText = typeof body === "string" ? body : JSON.stringify(body ?? {});
-    return new Response(bodyText, { status, headers: { "Content-Type": "application/json", ...headers } });
-  } catch (err) {
-    try {
-      const url = typeof input === "string" ? input : input.url;
-      const parsed = new URL(url, "http://localhost");
-      const pathname = parsed.pathname;
-      if (pathname === "/api/health") {
-        const body = JSON.stringify({ status: "healthy", timestamp: new Date().toISOString(), database: "connected" });
-        return new Response(body, { status: 200, headers: { "Content-Type": "application/json" } });
-      }
-    } catch (e) {
-      // ignore
-    }
-    return originalFetch(input as any, init as any);
+    return new Response(bodyText, {
+      status,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+    });
+  } catch (error: any) {
+    console.error("[JEST-FETCH] API route error", error);
+    return new Response(JSON.stringify({ error: error?.message ?? "Unknown error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 };
 
 export {};
-
-// Force-replace global XMLHttpRequest with a lightweight shim that forwards to fetch
-// This prevents jsdom's native XHR from performing uncontrolled network requests during tests.
-// @ts-ignore
-globalThis.XMLHttpRequest = class {
-  _method = "GET";
-  _url = "";
-  _headers: Record<string, string> = {};
-  onload: ((this: any, ev: any) => any) | null = null;
-  onerror: ((this: any, ev: any) => any) | null = null;
-  status = 0;
-  responseText: string | null = null;
-
-  open(method: string, url: string) {
-    this._method = method;
-    this._url = url;
-  }
-
-  setRequestHeader(name: string, value: string) {
-    this._headers[name] = value;
-  }
-
-  async send(body?: any) {
-    try {
-      const res = await (globalThis.fetch as any)(this._url, {
-        method: this._method,
-        headers: this._headers,
-        body,
-      } as any);
-      this.status = res.status;
-      this.responseText = await res.text();
-      if (this.onload) setTimeout(() => this.onload && this.onload({ target: this }), 0);
-    } catch (err) {
-      if (this.onerror) setTimeout(() => this.onerror && this.onerror(err), 0);
-    }
-  }
-} as any;

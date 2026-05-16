@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           teacher: {
             include: {
               school: true,
-              ClassRoom: true,
+              classRoom: true,
             },
           },
           school: true,
@@ -76,13 +76,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: "Invalid credentials" },
           { status: 401 }
-        );
-      }
-
-      if (user.role === 'STUDENT') {
-        return NextResponse.json(
-          { error: "Students must log in with their Student ID" },
-          { status: 403 }
         );
       }
 
@@ -156,7 +149,7 @@ export async function POST(req: NextRequest) {
                     theme: student.school.theme,
                   }
                 : null,
-              classRoom: student.classRoom
+              classRoom: student.ClassRoom
                 ? {
                     id: student.classRoom.id,
                     name: student.classRoom.name,
