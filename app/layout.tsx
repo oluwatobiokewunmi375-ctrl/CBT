@@ -2,6 +2,7 @@ import "@/lib/seedExam"
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister'
+import CBTProvider from '@/components/CBTProvider'
 
 export const metadata = {
   title: 'CBT Pro - Modern Computer-Based Testing Platform',
@@ -21,7 +22,9 @@ export default function RootLayout({
       </head>
       <body className="bg-slate-950 text-white">
         <ServiceWorkerRegister />
-        {children}
+        <CBTProvider>
+          {children}
+        </CBTProvider>
         <Toaster position="top-right" />
       </body>
     </html>
