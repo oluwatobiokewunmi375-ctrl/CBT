@@ -1,7 +1,8 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
+import toast from "react-hot-toast"
 
 export default function ExamPage() {
   const router = useRouter()
@@ -9,6 +10,7 @@ export default function ExamPage() {
   const examId = params.id as string
 
   const [exam, setExam] = useState<any>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
@@ -16,81 +18,116 @@ export default function ExamPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    const fetchExam = async () => {
+  const fetchExam = useCallback(async () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const res = await fetch(`/api/exam/${examId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Failed to load exam")
+      }
+
+      const data = await res.json()
+      setExam(data.exam)
+      setTimeLeft(data.exam.duration * 60)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error loading exam")
+    } finally {
+      setLoading(false)
+    }
+  }, [examId, router])
+
+  const startSession = useCallback(async () => {
+    if (!examId) return
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const res = await fetch("/api/exam/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          examId,
+          ipAddress: window.location.hostname,
+          deviceInfo: navigator.userAgent,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Unable to start exam session")
+      }
+
+      const data = await res.json()
+      setSessionId(data.session?.id ?? null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to start exam session"
+      setError(message)
+      toast.error(message)
+    }
+  }, [examId, router])
+
+  const saveProgress = useCallback(
+    async (currentQuestionId?: string, answersPayload?: Record<string, string>) => {
+      if (!sessionId) return
       try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
         if (!token) {
-          router.push('/login')
+          router.push("/login")
           return
         }
 
-        const res = await fetch(`/api/exam/${examId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        await fetch("/api/exam/save-progress", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            sessionId,
+            answers: answersPayload || answers,
+            currentQuestionId,
+          }),
         })
-
-        if (res.ok) {
-          const data = await res.json()
-          setExam(data.exam)
-          setTimeLeft(data.exam.duration * 60) // Convert to seconds
-        } else {
-          setError("Failed to load exam")
-        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading exam")
-      } finally {
-        setLoading(false)
+        console.warn("Progress save failed:", err)
       }
-    }
+    },
+    [sessionId, answers, router]
+  )
 
-    fetchExam()
-  }, [examId, router])
-
-  // Timer countdown
   useEffect(() => {
-    if (!timeLeft || timeLeft <= 0 || submitted) return
+    fetchExam()
+  }, [fetchExam])
 
-    const timer = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t && t <= 1) {
-          handleSubmit()
-          return 0
-        }
-        return (t || 0) - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [timeLeft, submitted])
-
-  const handleAnswerSelect = (optionId: string) => {
-    const question = exam.questions[currentQuestion]
-    setAnswers((prev) => ({
-      ...prev,
-      [question.id]: optionId,
-    }))
-  }
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1)
+  useEffect(() => {
+    if (exam && !sessionId) {
+      startSession()
     }
-  }
-
-  const handleNext = () => {
-    if (currentQuestion < exam.questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-    }
-  }
+  }, [exam, sessionId, startSession])
 
   const handleSubmit = useCallback(async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
       if (!token) {
-        router.push('/login')
+        router.push("/login")
         return
       }
-      
+
       const formattedAnswers: Record<string, string> = {}
 
       exam.questions.forEach((q: any) => {
@@ -107,19 +144,61 @@ export default function ExamPage() {
           examId,
           answers: formattedAnswers,
           timeSpent: (exam.duration * 60 - (timeLeft || 0)) / 60,
+          sessionId,
         }),
       })
 
       if (res.ok) {
-        const data = await res.json()
         setSubmitted(true)
       } else {
-        setError("Failed to submit exam")
+        const data = await res.json()
+        setError(data.error || "Failed to submit exam")
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error submitting exam")
     }
-  }, [exam, answers, examId, timeLeft])
+  }, [exam, answers, examId, timeLeft, router, sessionId])
+
+  useEffect(() => {
+    if (!timeLeft || timeLeft <= 0 || submitted) return
+
+    const timer = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t && t <= 1) {
+          handleSubmit()
+          return 0
+        }
+        return (t || 0) - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timeLeft, submitted, handleSubmit])
+
+  const handleAnswerSelect = async (optionId: string) => {
+    const question = exam.questions[currentQuestion]
+    const newAnswers = {
+      ...answers,
+      [question.id]: optionId,
+    }
+
+    setAnswers(newAnswers)
+    await saveProgress(question.id, newAnswers)
+  }
+
+  const handlePrevious = async () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1)
+      await saveProgress()
+    }
+  }
+
+  const handleNext = async () => {
+    if (currentQuestion < exam.questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
+      await saveProgress()
+    }
+  }
 
   if (loading) {
     return (
@@ -184,7 +263,6 @@ export default function ExamPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Timer */}
       <div className="bg-white shadow sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
@@ -210,16 +288,13 @@ export default function ExamPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow p-8">
-              {/* Question */}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   {question.content || question.text}
                 </h2>
 
-                {/* Options */}
                 <div className="space-y-3">
                   {question.options.map((option: any) => (
                     <button
@@ -250,7 +325,6 @@ export default function ExamPage() {
                 </div>
               </div>
 
-              {/* Navigation */}
               <div className="flex gap-4 border-t pt-8">
                 <button
                   onClick={handlePrevious}
@@ -279,9 +353,7 @@ export default function ExamPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Progress */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h3 className="font-semibold text-gray-900 mb-4">Progress</h3>
               <div className="text-sm text-gray-600 mb-4">
@@ -297,7 +369,6 @@ export default function ExamPage() {
               </div>
             </div>
 
-            {/* Question Navigator */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Questions</h3>
               <div className="grid grid-cols-5 gap-2">

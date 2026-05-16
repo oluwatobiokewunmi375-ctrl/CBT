@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/auth/middleware";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -16,6 +17,22 @@ async function generateStudentNo(schoolId: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    const authToken = req.headers.get("authorization")?.split(" ")[1];
+    if (!authToken) {
+      return NextResponse.json(
+        { error: "Unauthorized - login required" },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyToken(authToken);
+    if (!decoded || decoded.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        { error: "Unauthorized - super admin access required" },
+        { status: 403 }
+      );
+    }
+
     const {
       email,
       password,

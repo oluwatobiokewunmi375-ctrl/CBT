@@ -77,7 +77,9 @@ export default function LoginPage() {
         } else if (data.user.role === 'SCHOOL_ADMIN' || data.user.role === 'TEACHER') {
           router.push('/admin/dashboard')
         } else {
-          router.push('/dashboard')
+          toast.error('Dashboard login is only available for admins and teachers.')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
         }
       }
     } catch (error) {
@@ -116,12 +118,14 @@ export default function LoginPage() {
           )}
 
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             {school?.name && <h1 className="text-xl font-bold mb-2">{school.name}</h1>}
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-              CBT System
+              CBT System Access
             </div>
-            <p className="text-slate-400">Access your account</p>
+            <p className="text-slate-400 max-w-xl mx-auto">
+              Use Student ID login for exam access. Use Dashboard login only if you are a school or system administrator.
+            </p>
           </div>
 
           {/* Login Mode Selection */}
@@ -135,7 +139,7 @@ export default function LoginPage() {
                   : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
               }`}
             >
-              Dashboard
+              Dashboard Access
             </button>
             <button
               type="button"
@@ -146,7 +150,7 @@ export default function LoginPage() {
                   : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
               }`}
             >
-              Exam
+              Student Exam
             </button>
           </div>
 
@@ -222,7 +226,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  Sign In
+                  {loginMode === 'exam' ? 'Enter Exam' : 'Go to Dashboard'}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -230,12 +234,9 @@ export default function LoginPage() {
           </form>
 
           {/* Links */}
-          <div className="flex justify-between text-sm mt-6">
+          <div className="flex justify-center text-sm mt-6">
             <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300">
               Forgot password?
-            </Link>
-            <Link href="/signup" className="text-blue-400 hover:text-blue-300">
-              Create account
             </Link>
           </div>
         </div>

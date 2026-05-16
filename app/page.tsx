@@ -67,15 +67,9 @@ export default function LandingPage() {
           <div className="flex gap-4">
             <Link
               href="/login"
-              className="px-4 py-2 text-slate-300 hover:text-white transition"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
               className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition"
             >
-              Get Started
+              Sign In
             </Link>
           </div>
         </div>
@@ -103,16 +97,10 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/signup"
+                href="/login"
                 className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition transform hover:scale-105"
               >
-                Start Free Trial <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center px-8 py-4 border border-slate-600 rounded-xl font-semibold hover:border-slate-400 transition"
-              >
-                Sign In
+                Sign In <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </div>
           </motion.div>
@@ -237,10 +225,10 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/signup"
+              href="/login"
               className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/30 transition"
             >
-              Create Free Account <ArrowRight className="ml-2 w-5 h-5" />
+              Sign In <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link
               href="/support"

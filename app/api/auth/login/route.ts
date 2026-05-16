@@ -79,6 +79,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (user.role === 'STUDENT') {
+        return NextResponse.json(
+          { error: "Students must log in with their Student ID" },
+          { status: 403 }
+        );
+      }
+
       student = user.student || null;
     }
 
