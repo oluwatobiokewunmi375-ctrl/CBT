@@ -118,7 +118,7 @@ export default function ExamResultPage() {
         <div className="text-center">
           <p className="text-lg">Result not found for this exam.</p>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => safeNavigate(router, '/dashboard')}
             className="mt-6 rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
           >
             Back to dashboard

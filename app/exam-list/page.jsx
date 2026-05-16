@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { safeNavigate } from '../../lib/safeNavigate'
 import toast from 'react-hot-toast'
 
 export default function ExamList() {
@@ -13,7 +14,7 @@ export default function ExamList() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
     if (!token) {
-      router.push('/login')
+      safeNavigate(router, '/login')
       return
     }
 
@@ -66,7 +67,7 @@ export default function ExamList() {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-10 text-center text-slate-400">
             <p>No exams are currently available.</p>
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => safeNavigate(router, '/dashboard')}
               className="mt-6 inline-flex items-center justify-center rounded-full bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400"
             >
               Back to dashboard
@@ -105,13 +106,13 @@ export default function ExamList() {
 
                 <div className="mt-6 flex flex-wrap gap-3">
                   <button
-                    onClick={() => router.push(`/exam/${exam.id}`)}
+                    onClick={() => safeNavigate(router, `/exam/${exam.id}`)}
                     className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                   >
                     Start Exam
                   </button>
                   <button
-                    onClick={() => router.push(`/exam/${exam.id}/results`)}
+                    onClick={() => safeNavigate(router, `/exam/${exam.id}/results`)}
                     className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-500"
                   >
                     View Result

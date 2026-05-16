@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Mail, Lock, ArrowRight, Loader, Ticket } from 'lucide-react'
+import { saveSession } from '../../lib/auth/session'
+import { safeNavigate } from '../../lib/safeNavigate'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -70,12 +72,11 @@ export default function LoginPage() {
       toast.success('Login successful!')
 
       if (loginMode === 'exam') {
-        router.push('/exam-list')
+        safeNavigate(router, '/exam-list')
       } else {
-        if (data.user.role === 'SUPER_ADMIN') {
-          router.push('/super-admin/dashboard')
-        } else if (data.user.role === 'SCHOOL_ADMIN' || data.user.role === 'TEACHER') {
-          router.push('/admin/dashboard')
+        const dest = saveSession(data.user)
+        if (dest) {
+          safeNavigate(router, dest)
         } else {
           toast.error('Dashboard login is only available for admins and teachers.')
           localStorage.removeItem('token')

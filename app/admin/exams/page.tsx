@@ -52,7 +52,7 @@ export default function AdminExamsPage() {
             <p className="text-slate-400 mt-2">View and manage exams you created.</p>
           </div>
           <button
-            onClick={() => router.push('/admin/exams/create')}
+            onClick={() => safeNavigate(router, '/admin/exams/create')}
             className="rounded-full bg-cyan-500 px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
           >
             Create New Exam
@@ -90,13 +90,13 @@ export default function AdminExamsPage() {
 
                   <div className="flex flex-wrap items-center gap-3">
                     <button
-                      onClick={() => router.push(`/exam/${exam.id}`)}
+                      onClick={() => safeNavigate(router, `/exam/${exam.id}`)}
                       className="rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500"
                     >
                       Open Exam
                     </button>
                     <button
-                      onClick={() => router.push(`/exam/${exam.id}/results`)}
+                      onClick={() => safeNavigate(router, `/exam/${exam.id}/results`)}
                       className="rounded-full border border-slate-700 bg-slate-950/80 px-5 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500"
                     >
                       Results

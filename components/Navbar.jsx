@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, X, LogOut, Wifi, WifiOff } from 'lucide-react'
 import { useState } from 'react'
+import { safeNavigate } from '../lib/safeNavigate'
 
 export default function Navbar() {
   const { user, logout } = useAuthStore()
@@ -15,7 +16,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout()
-    router.push('/login')
+    safeNavigate(router, '/login')
   }
 
   if (!user) return null

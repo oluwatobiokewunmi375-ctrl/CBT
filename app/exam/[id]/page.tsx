@@ -125,7 +125,7 @@ export default function ExamPage() {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
       if (!token) {
-        router.push("/login")
+        safeNavigate(router, "/login")
         return
       }
 
@@ -238,7 +238,7 @@ export default function ExamPage() {
               Your exam has been submitted and is being graded.
             </p>
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => safeNavigate(router, "/dashboard")}
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
             >
               Back to Dashboard
