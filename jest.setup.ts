@@ -3,6 +3,10 @@ import fs from "fs";
 import path from "path";
 import { pathToFileURL } from "url";
 
+// Set test environment
+process.env.NODE_ENV = "test";
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-key";
+
 globalThis.Request = globalThis.Request ?? (globalThis as any).Request;
 globalThis.Response = globalThis.Response ?? (globalThis as any).Response;
 globalThis.Headers = globalThis.Headers ?? (globalThis as any).Headers;

@@ -1,6 +1,7 @@
 module.exports = {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
+  testTimeout: 30000,
   setupFilesAfterEnv: [
     '<rootDir>/jest.setup.ts',
     '<rootDir>/tests/setup/resetState.ts'

@@ -243,7 +243,7 @@ describe("Authentication API", () => {
   describe("GET /api/auth/profile", () => {
     it("should return user profile with valid token", async () => {
       const response = await fetch("/api/auth/profile", {
-        headers: { Authorization: `Bearer ${mockToken}` },
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       expect(response.status).toBe(200)
@@ -273,7 +273,7 @@ describe("Exam API", () => {
   describe("GET /api/exam/list", () => {
     it("should return list of available exams", async () => {
       const response = await fetch("/api/exam/list", {
-        headers: { Authorization: `Bearer ${mockToken}` },
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       expect(response.status).toBe(200)
@@ -291,8 +291,8 @@ describe("Exam API", () => {
 
   describe("GET /api/exam/[id]", () => {
     it("should return exam details with questions", async () => {
-      const response = await fetch(`/api/exam/${mockExamId}`, {
-        headers: { Authorization: `Bearer ${mockToken}` },
+      const response = await fetch(`/api/exam/${examId}`, {
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       if (response.ok) {
@@ -305,7 +305,7 @@ describe("Exam API", () => {
 
     it("should return 404 for non-existent exam", async () => {
       const response = await fetch("/api/exam/non-existent-id", {
-        headers: { Authorization: `Bearer ${mockToken}` },
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       expect(response.status).toBe(404)
@@ -318,10 +318,10 @@ describe("Exam API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${mockToken}`,
+          Authorization: `Bearer ${studentToken}`,
         },
         body: JSON.stringify({
-          examId: mockExamId,
+          examId: examId,
           answers: {
             question1: "option1",
             question2: "option2",
@@ -360,7 +360,7 @@ describe("Admin API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${mockToken}`,
+          Authorization: `Bearer ${teacherToken}`,
         },
         body: JSON.stringify({
           title: "New Test Exam",
@@ -395,7 +395,7 @@ describe("Admin API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${mockToken}`,
+          Authorization: `Bearer ${studentToken}`,
         },
         body: JSON.stringify({
           title: "Test",
@@ -411,7 +411,7 @@ describe("Admin API", () => {
   describe("GET /api/admin/dashboard", () => {
     it("should return dashboard statistics", async () => {
       const response = await fetch("/api/admin/dashboard", {
-        headers: { Authorization: `Bearer ${mockToken}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       })
 
       if (response.ok) {
@@ -429,7 +429,7 @@ describe("Results API", () => {
   describe("GET /api/results/list", () => {
     it("should return student results", async () => {
       const response = await fetch("/api/results/list", {
-        headers: { Authorization: `Bearer ${mockToken}` },
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       expect(response.status).toBe(200)
@@ -441,8 +441,8 @@ describe("Results API", () => {
 
   describe("GET /api/results/export", () => {
     it("should export results as JSON", async () => {
-      const response = await fetch(`/api/results/export?examId=${mockExamId}`, {
-        headers: { Authorization: `Bearer ${mockToken}` },
+      const response = await fetch(`/api/results/export?examId=${examId}`, {
+        headers: { Authorization: `Bearer ${studentToken}` },
       })
 
       if (response.ok) {
@@ -453,9 +453,9 @@ describe("Results API", () => {
 
     it("should export results as CSV", async () => {
       const response = await fetch(
-        `/api/results/export?examId=${mockExamId}&format=csv`,
+        `/api/results/export?examId=${examId}&format=csv`,
         {
-          headers: { Authorization: `Bearer ${mockToken}` },
+          headers: { Authorization: `Bearer ${studentToken}` },
         }
       )
 
@@ -469,8 +469,8 @@ describe("Results API", () => {
 describe("Analytics API", () => {
   describe("GET /api/analytics/exam", () => {
     it("should return exam analytics", async () => {
-      const response = await fetch(`/api/analytics/exam?examId=${mockExamId}`, {
-        headers: { Authorization: `Bearer ${mockToken}` },
+      const response = await fetch(`/api/analytics/exam?examId=${examId}`, {
+        headers: { Authorization: `Bearer ${teacherToken}` },
       })
 
       if (response.ok) {

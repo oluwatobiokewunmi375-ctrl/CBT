@@ -1,0 +1,713 @@
+
+> test
+> jest __tests__/api.test.ts --runInBand --testTimeout=60000
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\admin\exams\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\register\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\register\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\register\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\register\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\profile\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.error
+    Get profile error: PrismaClientValidationError: 
+    Invalid `prisma.user.findUnique()` invocation in
+    C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\profile\route.ts:18:36
+    
+      15 }
+      16 
+      17 // Get user with student details
+    ΓåÆ 18 const user = await prisma.user.findUnique({
+           where: {
+             id: "23107536-2aa5-40fd-a7d7-552ce713d75c"
+           },
+           include: {
+             student: {
+               include: {
+                 school: {
+                   select: {
+                     id: true,
+                     name: true
+                   }
+                 },
+                 classRoom: {
+                 ~~~~~~~~~
+                   select: {
+                     id: true,
+                     name: true
+                   }
+                 },
+                 results: {
+                   select: {
+                     exam: {
+                       select: {
+                         id: true,
+                         title: true
+                       }
+                     },
+                     score: true,
+                     percentage: true,
+                     grade: true
+                   },
+                   take: 10,
+                   orderBy: {
+                     createdAt: "desc"
+                   }
+                 },
+         ?       user?: true,
+         ?       sessions?: true,
+         ?       ClassRoom?: true,
+         ?       Payment?: true,
+         ?       ExamSubmission?: true
+               }
+             },
+             teacher: {
+               include: {
+                 school: {
+                   select: {
+                     id: true,
+                     name: true
+                   }
+                 },
+                 classRoom: {
+                   select: {
+                     id: true,
+                     name: true
+                   }
+                 }
+               }
+             },
+             school: true
+           }
+         })
+    
+    Unknown field `classRoom` for include statement on model `Student`. Available options are marked with ?.
+        at wn (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:29:1363)
+        at $n.handleRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6958)
+        at $n.handleAndLogRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6623)
+        at $n.request (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6307)
+        at l (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:130:9633)
+        at GET (C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\profile\route.ts:18:18)
+        at globalThis.fetch (C:\Users\laternabooks.ng\Desktop\CBT\jest.setup.ts:142:20)
+        at Object.<anonymous> (C:\Users\laternabooks.ng\Desktop\CBT\__tests__\api.test.ts:245:24) {
+      clientVersion: '5.22.0'
+    }
+
+    [0m [90m 115 |[39m     })[33m;[39m
+     [90m 116 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 117 |[39m     console[33m.[39merror([32m"Get profile error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 118 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 119 |[39m       { error[33m:[39m [32m"Internal server error"[39m }[33m,[39m
+     [90m 120 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at GET (app/api/auth/profile/route.ts:117:13)
+      at globalThis.fetch (jest.setup.ts:142:20)
+      at Object.<anonymous> (__tests__/api.test.ts:245:24)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\profile\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\profile\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\list\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\list\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts { id: '55e66ce3-1faf-4fdf-b909-14189b6b5887' }
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.error
+    Get exam detail error: PrismaClientValidationError: 
+    Invalid `prisma.exam.findUnique()` invocation in
+    C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts:21:36
+    
+      18   return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      19 }
+      20 
+    ΓåÆ 21 const exam = await prisma.exam.findUnique({
+           where: {
+             id: "55e66ce3-1faf-4fdf-b909-14189b6b5887"
+           },
+           include: {
+             questions: {
+               include: {
+                 options: true
+               }
+             },
+             createdBy: {
+               select: {
+                 id: true,
+                 fullName: true,
+                 ~~~~~~~~
+         ?       userId?: true,
+         ?       schoolId?: true,
+         ?       employeeNo?: true,
+         ?       department?: true,
+         ?       classRoomId?: true,
+         ?       createdAt?: true,
+         ?       updatedAt?: true,
+         ?       deletedAt?: true,
+         ?       user?: true,
+         ?       school?: true,
+         ?       classRoom?: true,
+         ?       exams?: true,
+         ?       _count?: true
+               }
+             }
+           }
+         })
+    
+    Unknown field `fullName` for select statement on model `Teacher`. Available options are marked with ?.
+        at wn (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:29:1363)
+        at $n.handleRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6958)
+        at $n.handleAndLogRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6623)
+        at $n.request (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6307)
+        at l (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:130:9633)
+        at GET (C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts:21:18)
+        at globalThis.fetch (C:\Users\laternabooks.ng\Desktop\CBT\jest.setup.ts:142:20)
+        at Object.<anonymous> (C:\Users\laternabooks.ng\Desktop\CBT\__tests__\api.test.ts:294:24) {
+      clientVersion: '5.22.0'
+    }
+
+    [0m [90m 42 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m exam })[33m;[39m
+     [90m 43 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 44 |[39m     console[33m.[39merror([32m"Get exam detail error:"[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 45 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 46 |[39m       { error[33m:[39m [32m"Internal server error"[39m }[33m,[39m
+     [90m 47 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at GET (app/api/exam/[id]/route.ts:44:13)
+      at globalThis.fetch (jest.setup.ts:142:20)
+      at Object.<anonymous> (__tests__/api.test.ts:294:24)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts { id: 'non-existent-id' }
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.error
+    Get exam detail error: PrismaClientValidationError: 
+    Invalid `prisma.exam.findUnique()` invocation in
+    C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts:21:36
+    
+      18   return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      19 }
+      20 
+    ΓåÆ 21 const exam = await prisma.exam.findUnique({
+           where: {
+             id: "non-existent-id"
+           },
+           include: {
+             questions: {
+               include: {
+                 options: true
+               }
+             },
+             createdBy: {
+               select: {
+                 id: true,
+                 fullName: true,
+                 ~~~~~~~~
+         ?       userId?: true,
+         ?       schoolId?: true,
+         ?       employeeNo?: true,
+         ?       department?: true,
+         ?       classRoomId?: true,
+         ?       createdAt?: true,
+         ?       updatedAt?: true,
+         ?       deletedAt?: true,
+         ?       user?: true,
+         ?       school?: true,
+         ?       classRoom?: true,
+         ?       exams?: true,
+         ?       _count?: true
+               }
+             }
+           }
+         })
+    
+    Unknown field `fullName` for select statement on model `Teacher`. Available options are marked with ?.
+        at wn (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:29:1363)
+        at $n.handleRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6958)
+        at $n.handleAndLogRequestError (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6623)
+        at $n.request (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:121:6307)
+        at l (C:\Users\laternabooks.ng\Desktop\CBT\node_modules\@prisma\client\runtime\library.js:130:9633)
+        at GET (C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts:21:18)
+        at globalThis.fetch (C:\Users\laternabooks.ng\Desktop\CBT\jest.setup.ts:142:20)
+        at Object.<anonymous> (C:\Users\laternabooks.ng\Desktop\CBT\__tests__\api.test.ts:307:24) {
+      clientVersion: '5.22.0'
+    }
+
+    [0m [90m 42 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m exam })[33m;[39m
+     [90m 43 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 44 |[39m     console[33m.[39merror([32m"Get exam detail error:"[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 45 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 46 |[39m       { error[33m:[39m [32m"Internal server error"[39m }[33m,[39m
+     [90m 47 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at GET (app/api/exam/[id]/route.ts:44:13)
+      at globalThis.fetch (jest.setup.ts:142:20)
+      at Object.<anonymous> (__tests__/api.test.ts:307:24)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\submit\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\admin\exams\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\admin\exams\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\admin\dashboard\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\results\list\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\results\export\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\results\export\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\analytics\exam\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\school\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\school\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+  console.log
+    Γ£à Test data seeded
+
+      at seedTestData (tests/setup/db.ts:120:13)
+
+  console.log
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\health\route.ts {}
+
+      at globalThis.fetch (jest.setup.ts:112:15)
+
+FAIL __tests__/api.test.ts (14.598 s)
+  Authentication API
+    POST /api/auth/register
+      ├ù should register a new student user (431 ms)
+      ├ù should register a new teacher user (397 ms)
+      ΓêÜ should reject duplicate email (402 ms)
+      ΓêÜ should require email and password (408 ms)
+    POST /api/auth/login
+      ΓêÜ should login with valid credentials (799 ms)
+      ΓêÜ should reject invalid credentials (745 ms)
+      ΓêÜ should reject non-existent user (393 ms)
+    GET /api/auth/profile
+      ├ù should return user profile with valid token (524 ms)
+      ΓêÜ should reject request without token (378 ms)
+      ΓêÜ should reject invalid token (391 ms)
+  Exam API
+    GET /api/exam/list
+      ├ù should return list of available exams (439 ms)
+      ΓêÜ should reject unauthorized request (471 ms)
+    GET /api/exam/[id]
+      ΓêÜ should return exam details with questions (404 ms)
+      ├ù should return 404 for non-existent exam (421 ms)
+    POST /api/exam/submit
+      ΓêÜ should submit exam answers and calculate score (409 ms)
+      ├ù should reject submission without required fields (408 ms)
+  Admin API
+    POST /api/admin/exams
+      ΓêÜ should create exam (teacher only) (377 ms)
+      ΓêÜ should reject non-teacher users (391 ms)
+    GET /api/admin/dashboard
+      ├ù should return dashboard statistics (582 ms)
+  Results API
+    GET /api/results/list
+      ├ù should return student results (798 ms)
+    GET /api/results/export
+      ΓêÜ should export results as JSON (405 ms)
+      ΓêÜ should export results as CSV (373 ms)
+  Analytics API
+    GET /api/analytics/exam
+      ΓêÜ should return exam analytics (397 ms)
+  School API
+    POST /api/school
+      ΓêÜ should create new school (397 ms)
+    GET /api/school
+      ├ù should list all schools (395 ms)
+  Health Check
+    GET /api/health
+      ΓêÜ should return health status (384 ms)
+
+  ΓùÅ Authentication API ΓÇ║ POST /api/auth/register ΓÇ║ should register a new student user
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 404
+
+      144 |       })
+      145 |
+    > 146 |       expect(response.status).toBe(201)
+          |                               ^
+      147 |       const data = await response.json()
+      148 |       expect(data.success).toBe(true)
+      149 |       expect(data.token).toBeDefined()
+
+      at Object.<anonymous> (__tests__/api.test.ts:146:31)
+
+  ΓùÅ Authentication API ΓÇ║ POST /api/auth/register ΓÇ║ should register a new teacher user
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 404
+
+      165 |       })
+      166 |
+    > 167 |       expect(response.status).toBe(201)
+          |                               ^
+      168 |       const data = await response.json()
+      169 |       expect(data.user.role).toBe("TEACHER")
+      170 |     })
+
+      at Object.<anonymous> (__tests__/api.test.ts:167:31)
+
+  ΓùÅ Authentication API ΓÇ║ GET /api/auth/profile ΓÇ║ should return user profile with valid token
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+      247 |       })
+      248 |
+    > 249 |       expect(response.status).toBe(200)
+          |                               ^
+      250 |       const data = await response.json()
+      251 |       expect(data.profile).toBeDefined()
+      252 |       expect(data.profile.email).toBeDefined()
+
+      at Object.<anonymous> (__tests__/api.test.ts:249:31)
+
+  ΓùÅ Exam API ΓÇ║ GET /api/exam/list ΓÇ║ should return list of available exams
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      277 |       })
+      278 |
+    > 279 |       expect(response.status).toBe(200)
+          |                               ^
+      280 |       const data = await response.json()
+      281 |       expect(data.success).toBe(true)
+      282 |       expect(Array.isArray(data.exams)).toBe(true)
+
+      at Object.<anonymous> (__tests__/api.test.ts:279:31)
+
+  ΓùÅ Exam API ΓÇ║ GET /api/exam/[id] ΓÇ║ should return 404 for non-existent exam
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 404
+    Received: 500
+
+      309 |       })
+      310 |
+    > 311 |       expect(response.status).toBe(404)
+          |                               ^
+      312 |     })
+      313 |   })
+      314 |
+
+      at Object.<anonymous> (__tests__/api.test.ts:311:31)
+
+  ΓùÅ Exam API ΓÇ║ POST /api/exam/submit ΓÇ║ should reject submission without required fields
+
+    ReferenceError: mockToken is not defined
+
+      344 |         headers: {
+      345 |           "Content-Type": "application/json",
+    > 346 |           Authorization: `Bearer ${mockToken}`,
+          |                                    ^
+      347 |         },
+      348 |         body: JSON.stringify({ timeSpent: 25 }),
+      349 |       })
+
+      at Object.<anonymous> (__tests__/api.test.ts:346:36)
+
+  ΓùÅ Admin API ΓÇ║ GET /api/admin/dashboard ΓÇ║ should return dashboard statistics
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      417 |       if (response.ok) {
+      418 |         const data = await response.json()
+    > 419 |         expect(data.dashboard).toBeDefined()
+          |                                ^
+      420 |         expect(data.dashboard.statistics).toBeDefined()
+      421 |         expect(data.dashboard.statistics.totalExams).toBeDefined()
+      422 |         expect(data.dashboard.statistics.totalStudents).toBeDefined()
+
+      at Object.<anonymous> (__tests__/api.test.ts:419:32)
+
+  ΓùÅ Results API ΓÇ║ GET /api/results/list ΓÇ║ should return student results
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      433 |       })
+      434 |
+    > 435 |       expect(response.status).toBe(200)
+          |                               ^
+      436 |       const data = await response.json()
+      437 |       expect(data.success).toBe(true)
+      438 |       expect(Array.isArray(data.results)).toBe(true)
+
+      at Object.<anonymous> (__tests__/api.test.ts:435:31)
+
+  ΓùÅ School API ΓÇ║ GET /api/school ΓÇ║ should list all schools
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 401
+
+      508 |       const response = await fetch("/api/school")
+      509 |
+    > 510 |       expect(response.status).toBe(200)
+          |                               ^
+      511 |       const data = await response.json()
+      512 |       expect(data.success).toBe(true)
+      513 |       expect(Array.isArray(data.schools)).toBe(true)
+
+      at Object.<anonymous> (__tests__/api.test.ts:510:31)
+
+Test Suites: 1 failed, 1 total
+Tests:       9 failed, 17 passed, 26 total
+Snapshots:   0 total
+Time:        14.955 s
+Ran all test suites matching __tests__/api.test.ts.

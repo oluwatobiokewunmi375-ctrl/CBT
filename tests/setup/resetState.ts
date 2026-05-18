@@ -1,6 +1,10 @@
-beforeEach(() => {
-  globalThis.__CBT_STATE__ = {
-    users: new Map(),
-    tokens: new Map()
-  };
+import { resetTestDatabase } from "./db";
+
+// Reset database between tests to ensure isolation
+beforeEach(async () => {
+  try {
+    await resetTestDatabase();
+  } catch (error) {
+    console.warn("Database reset warning:", error);
+  }
 });
