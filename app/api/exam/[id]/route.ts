@@ -29,7 +29,11 @@ export async function GET(
         createdBy: {
           select: {
             id: true,
-            fullName: true,
+            user: {
+              select: {
+                fullName: true,
+              },
+            },
           },
         },
       },

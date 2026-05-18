@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { safeNavigate } from '../../../../lib/safeNavigate'
+import { safeNavigate } from '@/lib/safeNavigate'
 import toast from "react-hot-toast"
 import OfflineExamRunner from '@/components/exam/OfflineExamRunner'
 import { useOfflineStatus } from '@/lib/hooks/useOfflineStatus'
@@ -11,7 +11,7 @@ export default function ExamPage() {
   const router = useRouter()
   const params = useParams()
   const examId = params.id as string
-  const { isOnline } = useOfflineStatus()
+  const { isOffline } = useOfflineStatus()
 
   const [exam, setExam] = useState<any>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -118,7 +118,7 @@ export default function ExamPage() {
     fetchExam()
   }, [fetchExam])
 
-  if (!isOnline) {
+  if (isOffline) {
     return <OfflineExamRunner examId={Number(examId)} />
   }
 

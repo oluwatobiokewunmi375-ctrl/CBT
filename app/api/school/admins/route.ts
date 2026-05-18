@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Only SUPER_ADMIN may create SCHOOL_ADMIN; otherwise force role to ADMIN
-    let finalRole = 'ADMIN';
+    let finalRole: 'ADMIN' | 'SCHOOL_ADMIN' | 'SUPER_ADMIN' | 'STUDENT' = 'ADMIN';
     if (role && decoded.role === 'SUPER_ADMIN') {
       finalRole = role === 'SCHOOL_ADMIN' ? 'SCHOOL_ADMIN' : 'ADMIN';
     }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashed,
         fullName,
-        role: finalRole,
+        role: finalRole as any,
         schoolId,
       },
     });

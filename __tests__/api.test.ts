@@ -343,7 +343,7 @@ describe("Exam API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${mockToken}`,
+          Authorization: `Bearer ${studentToken}`,
         },
         body: JSON.stringify({ timeSpent: 25 }),
       })

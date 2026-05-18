@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
                 name: true,
               },
             },
-            classRoom: {
+            ClassRoom: {
               select: {
                 id: true,
                 name: true,
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
               id: user.student.id,
               studentNo: user.student.studentNo,
               school: user.student.school,
-              classRoom: user.student.classRoom,
+              classRoom: user.student.ClassRoom,
               recentResults: user.student.results,
               averageScore:
                 user.student.results.length > 0

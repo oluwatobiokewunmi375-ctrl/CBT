@@ -9,21 +9,23 @@
  * Run with: node scripts/verify-integrity.js
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const CRITICAL_FILES = [
-  // Core application
-  'src/app/page.tsx',
-  'src/server/auth/jwt.ts',
+  // Core application - using new app structure
+  'app/layout.tsx',
+  'app/page.tsx',
   'prisma/schema.prisma',
-  '.env.local',
   
   // Configuration
-  'next.config.js',
+  'next.config.mjs',
   'tsconfig.json',
   'package.json',
-  'prisma/prisma.config.js',
   
   // Security
   'PROJECT_LOCK.md',
@@ -31,22 +33,17 @@ const CRITICAL_FILES = [
 ];
 
 const CRITICAL_DIRECTORIES = [
-  'src',
-  'src/app',
-  'src/server',
-  'src/server/auth',
-  'src/components',
-  'src/hooks',
-  'src/lib',
-  'src/utils',
+  'app',
+  'components',
+  'hooks',
+  'lib',
   'prisma',
   'prisma/migrations',
-  'node_modules',
-  '.next',
+  'public',
 ];
 
 console.log('\n🔒 CBT PROJECT INTEGRITY CHECK\n');
-console.log('=' .repeat(50));
+console.log('='.repeat(50));
 
 let errorCount = 0;
 

@@ -1,6 +1,6 @@
 
 > test
-> jest __tests__/api.test.ts --runInBand --testTimeout=60000
+> jest __tests__/api.test.ts
 
   console.log
     [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\auth\login\route.ts {}
@@ -117,7 +117,7 @@
       17 // Get user with student details
     ΓåÆ 18 const user = await prisma.user.findUnique({
            where: {
-             id: "23107536-2aa5-40fd-a7d7-552ce713d75c"
+             id: "76973332-a29d-4fbc-8d02-dee4e41cd2e3"
            },
            include: {
              student: {
@@ -249,7 +249,7 @@
       at seedTestData (tests/setup/db.ts:120:13)
 
   console.log
-    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts { id: '55e66ce3-1faf-4fdf-b909-14189b6b5887' }
+    [JEST-FETCH] route found C:\Users\laternabooks.ng\Desktop\CBT\app\api\exam\[id]\route.ts { id: 'e1fd20ce-dde6-4032-b4fe-d7fc76068ad0' }
 
       at globalThis.fetch (jest.setup.ts:112:15)
 
@@ -263,7 +263,7 @@
       20 
     ΓåÆ 21 const exam = await prisma.exam.findUnique({
            where: {
-             id: "55e66ce3-1faf-4fdf-b909-14189b6b5887"
+             id: "e1fd20ce-dde6-4032-b4fe-d7fc76068ad0"
            },
            include: {
              questions: {
@@ -508,54 +508,54 @@
 
       at globalThis.fetch (jest.setup.ts:112:15)
 
-FAIL __tests__/api.test.ts (14.598 s)
+FAIL __tests__/api.test.ts (14.075 s)
   Authentication API
     POST /api/auth/register
-      ├ù should register a new student user (431 ms)
-      ├ù should register a new teacher user (397 ms)
-      ΓêÜ should reject duplicate email (402 ms)
-      ΓêÜ should require email and password (408 ms)
+      ├ù should register a new student user (416 ms)
+      ├ù should register a new teacher user (421 ms)
+      ΓêÜ should reject duplicate email (380 ms)
+      ΓêÜ should require email and password (396 ms)
     POST /api/auth/login
-      ΓêÜ should login with valid credentials (799 ms)
-      ΓêÜ should reject invalid credentials (745 ms)
-      ΓêÜ should reject non-existent user (393 ms)
+      ΓêÜ should login with valid credentials (766 ms)
+      ΓêÜ should reject invalid credentials (786 ms)
+      ΓêÜ should reject non-existent user (386 ms)
     GET /api/auth/profile
-      ├ù should return user profile with valid token (524 ms)
-      ΓêÜ should reject request without token (378 ms)
-      ΓêÜ should reject invalid token (391 ms)
+      ├ù should return user profile with valid token (446 ms)
+      ΓêÜ should reject request without token (416 ms)
+      ΓêÜ should reject invalid token (438 ms)
   Exam API
     GET /api/exam/list
-      ├ù should return list of available exams (439 ms)
-      ΓêÜ should reject unauthorized request (471 ms)
+      ├ù should return list of available exams (516 ms)
+      ΓêÜ should reject unauthorized request (390 ms)
     GET /api/exam/[id]
-      ΓêÜ should return exam details with questions (404 ms)
-      ├ù should return 404 for non-existent exam (421 ms)
+      ΓêÜ should return exam details with questions (425 ms)
+      ├ù should return 404 for non-existent exam (433 ms)
     POST /api/exam/submit
-      ΓêÜ should submit exam answers and calculate score (409 ms)
-      ├ù should reject submission without required fields (408 ms)
+      ΓêÜ should submit exam answers and calculate score (422 ms)
+      ├ù should reject submission without required fields (418 ms)
   Admin API
     POST /api/admin/exams
-      ΓêÜ should create exam (teacher only) (377 ms)
-      ΓêÜ should reject non-teacher users (391 ms)
+      ΓêÜ should create exam (teacher only) (414 ms)
+      ΓêÜ should reject non-teacher users (401 ms)
     GET /api/admin/dashboard
-      ├ù should return dashboard statistics (582 ms)
+      ├ù should return dashboard statistics (577 ms)
   Results API
     GET /api/results/list
-      ├ù should return student results (798 ms)
+      ├ù should return student results (414 ms)
     GET /api/results/export
-      ΓêÜ should export results as JSON (405 ms)
-      ΓêÜ should export results as CSV (373 ms)
+      ΓêÜ should export results as JSON (534 ms)
+      ΓêÜ should export results as CSV (396 ms)
   Analytics API
     GET /api/analytics/exam
-      ΓêÜ should return exam analytics (397 ms)
+      ΓêÜ should return exam analytics (387 ms)
   School API
     POST /api/school
-      ΓêÜ should create new school (397 ms)
+      ΓêÜ should create new school (460 ms)
     GET /api/school
-      ├ù should list all schools (395 ms)
+      ├ù should list all schools (415 ms)
   Health Check
     GET /api/health
-      ΓêÜ should return health status (384 ms)
+      ΓêÜ should return health status (413 ms)
 
   ΓùÅ Authentication API ΓÇ║ POST /api/auth/register ΓÇ║ should register a new student user
 
@@ -709,5 +709,5 @@ FAIL __tests__/api.test.ts (14.598 s)
 Test Suites: 1 failed, 1 total
 Tests:       9 failed, 17 passed, 26 total
 Snapshots:   0 total
-Time:        14.955 s
+Time:        14.589 s
 Ran all test suites matching __tests__/api.test.ts.

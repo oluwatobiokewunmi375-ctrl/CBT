@@ -9,6 +9,7 @@
     "@types/react": "^19.2.14",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "dexie": "^4.4.2",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jsonwebtoken": "^9.0.3",
@@ -33,9 +34,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed:mock": "node scripts/create-mock-accounts.cjs"
-    ,
-    "verify:seed": "node --enable-source-maps scripts/verify-seed.cjs"
+    "seed:mock": "node scripts/create-mock-accounts.cjs",
+    "verify:seed": "node --enable-source-maps scripts/verify-seed.cjs",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "verify": "node scripts/verify-integrity.js",
+    "check": "npm run verify && npm run type-check && npm run lint",
+    "secure": "git status && npm run verify",
+    "lock": "git add . && git commit -m 'LOCK: Secure checkpoint'"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
