@@ -5,19 +5,18 @@ import { verifyToken } from "@/lib/auth/middleware";
 export async function POST(req: NextRequest) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const decoded = token ? verifyToken(token) : null;
 
-    const decoded = verifyToken(token);
-    if (!decoded || decoded.role !== "SUPER_ADMIN") {
-      return NextResponse.json(
-        { error: "Unauthorized - super admin access required" },
-        { status: 403 }
-      );
-    }
-
-    const { name, shortCode, motto, address, principal, logoUrl, bannerUrl, theme } = await req.json();
+    const {
+      name,
+      shortCode,
+      motto,
+      address,
+      principal,
+      logoUrl,
+      bannerUrl,
+      theme,
+    } = await req.json();
 
     if (!name || !shortCode) {
       return NextResponse.json(
@@ -37,17 +36,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const createData: any = {
+      name,
+      shortCode,
+      motto: motto || undefined,
+      address: address || undefined,
+      principal: principal || undefined,
+      logoUrl: logoUrl || undefined,
+      bannerUrl: bannerUrl || undefined,
+      theme: theme || undefined,
+    };
+
+    if (!decoded || decoded.role !== "SUPER_ADMIN") {
+      // Allow public school creation for initial registrations
+      delete createData.motto;
+      delete createData.principal;
+      delete createData.logoUrl;
+      delete createData.bannerUrl;
+      delete createData.theme;
+    }
+
     const school = await prisma.school.create({
-      data: {
-        name,
-        shortCode,
-        motto: motto || undefined,
-        address: address || undefined,
-        principal: principal || undefined,
-        logoUrl: logoUrl || undefined,
-        bannerUrl: bannerUrl || undefined,
-        theme: theme || undefined,
-      },
+      data: createData,
     });
 
     return NextResponse.json(
@@ -67,6 +77,8 @@ export async function GET(req: NextRequest) {
   try {
     const query = new URL(req.url).searchParams;
     const shortCode = query.get("shortCode");
+    const token = req.headers.get("authorization")?.split(" ")[1];
+    const decoded = token ? verifyToken(token) : null;
 
     if (shortCode) {
       const school = await prisma.school.findUnique({
@@ -91,32 +103,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, school });
     }
 
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const includeCounts = decoded && ["SUPER_ADMIN", "ADMIN"].includes(decoded.role);
 
-    const decoded = verifyToken(token);
-    if (!decoded || !["SUPER_ADMIN", "ADMIN"].includes(decoded.role)) {
-      return NextResponse.json(
-        { error: "Unauthorized - admin access required" },
-        { status: 403 }
-      );
-    }
-
-    const schools = await prisma.school.findMany({
-      include: {
-        _count: {
-          select: {
-            students: true,
-            teachers: true,
-            exams: true,
+    const schools = includeCounts
+      ? await prisma.school.findMany({
+          include: {
+            _count: {
+              select: {
+                students: true,
+                teachers: true,
+                exams: true,
+              },
+            },
           },
-        },
-      },
-    });
+        })
+      : await prisma.school.findMany();
 
-    return NextResponse.json({ success: true, schools });
+    const publicSchools = schools.map((school) => ({
+      id: school.id,
+      name: school.name,
+      shortCode: school.shortCode,
+      motto: school.motto,
+      address: school.address,
+      principal: school.principal,
+      logoUrl: school.logoUrl,
+      bannerUrl: school.bannerUrl,
+      theme: school.theme,
+      _count: includeCounts ? (school as any)._count : undefined,
+    }));
+
+    return NextResponse.json({ success: true, schools: publicSchools });
   } catch (error) {
     console.error("Get schools error:", error);
     return NextResponse.json(

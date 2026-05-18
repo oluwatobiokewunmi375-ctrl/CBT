@@ -40,7 +40,7 @@ async function createUser(role: string, email: string, password: string) {
   return response
 }
 
-beforeAll(async () => {
+beforeEach(async () => {
   const studentCandidates = [
     { email: "student@demo.com", password: "password123" },
     { email: "student.demo@test.com", password: "Student@123" },

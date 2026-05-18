@@ -126,9 +126,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      stats,
-      recentExams,
-      recentResults,
+      dashboard: {
+        statistics: stats,
+        recentExams,
+        recentResults,
+      },
     });
 
   } catch (error) {

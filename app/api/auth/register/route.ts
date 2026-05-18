@@ -86,9 +86,20 @@ export async function POST(req: NextRequest) {
 
     let school = null;
     if (schoolCode) {
+      const normalizedSchoolCode = schoolCode.toUpperCase();
       school = await prisma.school.findUnique({
-        where: { shortCode: schoolCode },
+        where: { shortCode: normalizedSchoolCode },
       });
+      if (!school && ["STUDENT", "TEACHER"].includes(normalizedRole)) {
+        school = await prisma.school.create({
+          data: {
+            shortCode: normalizedSchoolCode,
+            name: `${normalizedSchoolCode} School`,
+            motto: "Self-registered school",
+            address: "Auto-generated school registration",
+          },
+        });
+      }
       if (!school) {
         return NextResponse.json(
           { error: "School code not found" },

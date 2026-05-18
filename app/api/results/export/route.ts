@@ -10,10 +10,10 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded = verifyToken(token);
-    if (!decoded || decoded.role !== "TEACHER") {
+    if (!decoded) {
       return NextResponse.json(
-        { error: "Unauthorized - teachers only" },
-        { status: 403 }
+        { error: "Invalid token" },
+        { status: 401 }
       );
     }
 
@@ -28,31 +28,103 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get exam and results
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
-      include: {
-        results: {
-          include: {
-            student: {
-              select: {
-                studentNo: true,
-                user: {
-                  select: {
-                    fullName: true,
-                    email: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        },
+      select: {
+        id: true,
+        title: true,
+        totalMarks: true,
+        duration: true,
       },
     });
 
     if (!exam) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+    }
+
+    let results = [];
+
+    if (decoded.role === "TEACHER") {
+      const teacher = await prisma.teacher.findUnique({
+        where: { userId: decoded.userId },
+      });
+
+      if (!teacher) {
+        return NextResponse.json(
+          { error: "Teacher not found" },
+          { status: 404 }
+        );
+      }
+
+      results = await prisma.result.findMany({
+        where: { examId },
+        include: {
+          student: {
+            select: {
+              studentNo: true,
+              user: {
+                select: {
+                  fullName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else if (decoded.role === "STUDENT") {
+      const student = await prisma.student.findUnique({
+        where: { userId: decoded.userId },
+      });
+
+      if (!student) {
+        return NextResponse.json(
+          { error: "Student not found" },
+          { status: 404 }
+        );
+      }
+
+      results = await prisma.result.findMany({
+        where: { examId, studentId: student.id },
+        include: {
+          student: {
+            select: {
+              studentNo: true,
+              user: {
+                select: {
+                  fullName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else if (["ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"].includes(decoded.role)) {
+      results = await prisma.result.findMany({
+        where: { examId },
+        include: {
+          student: {
+            select: {
+              studentNo: true,
+              user: {
+                select: {
+                  fullName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } else {
+      return NextResponse.json(
+        { error: "Unauthorized - access denied" },
+        { status: 403 }
+      );
     }
 
     if (format === "csv") {
@@ -67,7 +139,7 @@ export async function GET(req: NextRequest) {
         "Grade",
         "Date",
       ];
-      const rows = exam.results.map((r) => [
+      const rows = results.map((r) => [
         r.student.studentNo,
         r.student.user.fullName,
         r.student.user.email,
@@ -99,7 +171,7 @@ export async function GET(req: NextRequest) {
           totalMarks: exam.totalMarks,
           duration: exam.duration,
         },
-        results: exam.results.map((r) => ({
+        results: results.map((r) => ({
           studentNo: r.student.studentNo,
           name: r.student.user.fullName,
           email: r.student.user.email,
