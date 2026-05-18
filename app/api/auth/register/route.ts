@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { signJwtToken } from "@/lib/auth/jwt";
 import { verifyToken } from "@/lib/auth/middleware";
 import { z } from "zod";
+import type { Role } from "@prisma/client";
 import { checkRateLimit } from "@/lib/security/rateLimit";
 
 const registerSchema = z.object({
@@ -70,8 +71,8 @@ export async function POST(req: NextRequest) {
       department,
     } = parsed.data;
 
-    const normalizedRole = (role as string).toUpperCase();
-    const allowedRoles = ["STUDENT", "TEACHER", "ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"];
+    const normalizedRole = (role as string).toUpperCase() as Role;
+    const allowedRoles: Role[] = ["STUDENT", "TEACHER", "ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"];
 
     if (!allowedRoles.includes(normalizedRole)) {
       return NextResponse.json({ error: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}` }, { status: 400 });

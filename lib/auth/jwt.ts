@@ -1,9 +1,10 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
 import type { Role } from "@prisma/client";
 import { env } from "@/lib/env";
 
 export type AuthTokenPayload = {
   id: string;
+  userId?: string;
   email: string;
   role: Role;
   studentId?: string;
@@ -13,8 +14,8 @@ export type AuthTokenPayload = {
   expiresAt?: string;
 };
 
-export function signJwtToken(payload: AuthTokenPayload, expiresIn = "7d") {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn });
+export function signJwtToken(payload: AuthTokenPayload, expiresIn: string | number = "7d") {
+  return jwt.sign(payload, env.JWT_SECRET as Secret, { expiresIn: expiresIn as any });
 }
 
 export function verifyJwtToken(token: string): AuthTokenPayload | null {
@@ -24,8 +25,11 @@ export function verifyJwtToken(token: string): AuthTokenPayload | null {
       return null;
     }
 
+    const userId = decoded.userId ? String(decoded.userId) : String(decoded.id);
+
     return {
       id: String(decoded.id),
+      userId,
       email: String(decoded.email),
       role: decoded.role as Role,
       studentId: decoded.studentId ? String(decoded.studentId) : undefined,

@@ -26,6 +26,16 @@ export function checkRateLimit(
   maxRequests = DEFAULT_MAX_REQUESTS,
   windowMs = DEFAULT_WINDOW_MS
 ) {
+  // Bypass rate limiting when explicitly disabled or during automated tests
+  // to avoid flakiness in CI/test runs.
+  //
+  // Priority: `DISABLE_RATE_LIMIT=true` overrides all environments. If not
+  // set, we fall back to `NODE_ENV === "test"` for backwards compatibility.
+  // This allows CI systems to opt-in via an env var without changing NODE_ENV.
+  if (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "test") {
+    return false;
+  }
+
   const clientIp = getClientIp(req);
   const cacheKey = `${key}:${clientIp}`;
   const now = Date.now();

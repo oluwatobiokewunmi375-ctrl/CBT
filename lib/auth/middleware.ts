@@ -5,11 +5,11 @@ export function verifyToken(token: string) {
   return verifyJwtToken(token);
 }
 
-export function getAuthToken(req: NextRequest) {
+export function getAuthToken(req: Request | NextRequest) {
   return req.headers.get("authorization")?.split(" ")[1] || null;
 }
 
-export async function authenticateToken(req: NextRequest) {
+export async function authenticateToken(req: Request | NextRequest) {
   const token = getAuthToken(req);
   if (!token) return null;
   return verifyJwtToken(token);

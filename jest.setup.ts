@@ -5,7 +5,7 @@ import { pathToFileURL } from "url";
 
 // Set test environment
 process.env.NODE_ENV = "test";
-process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-key";
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-key-01234567890123456789";
 
 globalThis.Request = globalThis.Request ?? (globalThis as any).Request;
 globalThis.Response = globalThis.Response ?? (globalThis as any).Response;
