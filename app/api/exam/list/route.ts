@@ -28,10 +28,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const now = new Date();
     const exams = await prisma.exam.findMany({
       where: {
         schoolId: student.schoolId,
         status: "PUBLISHED",
+        startAt: {
+          lte: now,
+        },
+        OR: [
+          { endAt: null },
+          { endAt: { gte: now } },
+        ],
       },
       select: {
         id: true,
@@ -39,6 +47,8 @@ export async function GET(req: NextRequest) {
         description: true,
         duration: true,
         totalMarks: true,
+        startAt: true,
+        endAt: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },

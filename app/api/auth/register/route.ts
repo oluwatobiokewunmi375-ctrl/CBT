@@ -1,27 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { signJwtToken } from "@/lib/auth/jwt";
 import { verifyToken } from "@/lib/auth/middleware";
+import { z } from "zod";
+import { checkRateLimit } from "@/lib/security/rateLimit";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  fullName: z.string().min(2),
+  role: z
+    .string()
+    .optional()
+    .transform((value) => (value ? value.toUpperCase() : "STUDENT")),
+  schoolCode: z.string().optional(),
+  classRoomId: z.string().optional(),
+  dob: z.string().optional(),
+  gender: z.string().optional(),
+  profileImage: z.string().optional(),
+  parentName: z.string().optional(),
+  parentPhone: z.string().optional(),
+  parentEmail: z.string().email().optional(),
+  address: z.string().optional(),
+  employeeNo: z.string().optional(),
+  department: z.string().optional(),
+});
 
 async function generateStudentNo(schoolId?: string): Promise<string> {
   if (schoolId) {
     const studentCount = await prisma.student.count({
       where: { schoolId },
     });
-    const nextNumber = studentCount + 1;
-    return nextNumber.toString().padStart(4, "0");
+    return (studentCount + 1).toString().padStart(4, "0");
   }
   return `STU-${Date.now().toString().slice(-6)}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    if (checkRateLimit(req, "auth_register", 5, 60_000)) {
+      return NextResponse.json({ error: "Too many registration attempts. Try again later." }, { status: 429 });
+    }
+
     const authToken = req.headers.get("authorization")?.split(" ")[1] || null;
     const decoded = authToken ? verifyToken(authToken) : null;
     const isSuperAdmin = decoded?.role === "SUPER_ADMIN";
+
+    const parsed = registerSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    }
 
     const {
       email,
@@ -39,57 +68,28 @@ export async function POST(req: NextRequest) {
       address,
       employeeNo,
       department,
-    } = await req.json();
+    } = parsed.data;
 
-    const normalizedRole = (role || "STUDENT").toUpperCase();
-    const allowedRoles = [
-      "STUDENT",
-      "TEACHER",
-      "ADMIN",
-      "SCHOOL_ADMIN",
-      "SUPER_ADMIN",
-    ];
+    const normalizedRole = (role as string).toUpperCase();
+    const allowedRoles = ["STUDENT", "TEACHER", "ADMIN", "SCHOOL_ADMIN", "SUPER_ADMIN"];
 
     if (!allowedRoles.includes(normalizedRole)) {
-      return NextResponse.json(
-        { error: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}` }, { status: 400 });
     }
 
-    if (!email || !password || !fullName) {
-      return NextResponse.json(
-        { error: "Email, password, and fullName required" },
-        { status: 400 }
-      );
+    if (["SUPER_ADMIN", "ADMIN", "SCHOOL_ADMIN"].includes(normalizedRole) && !isSuperAdmin) {
+      return NextResponse.json({ error: "Unauthorized to create this type of account" }, { status: 403 });
     }
 
-    if (
-      ["SUPER_ADMIN", "ADMIN", "SCHOOL_ADMIN"].includes(normalizedRole) &&
-      !isSuperAdmin
-    ) {
-      return NextResponse.json(
-        { error: "Unauthorized to create this type of account" },
-        { status: 403 }
-      );
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "User already exists" }, { status: 409 });
     }
 
     let school = null;
     if (schoolCode) {
       const normalizedSchoolCode = schoolCode.toUpperCase();
-      school = await prisma.school.findUnique({
-        where: { shortCode: normalizedSchoolCode },
-      });
+      school = await prisma.school.findUnique({ where: { shortCode: normalizedSchoolCode } });
       if (!school && ["STUDENT", "TEACHER"].includes(normalizedRole)) {
         school = await prisma.school.create({
           data: {
@@ -101,39 +101,23 @@ export async function POST(req: NextRequest) {
         });
       }
       if (!school) {
-        return NextResponse.json(
-          { error: "School code not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "School code not found" }, { status: 404 });
       }
     }
 
-    if (["STUDENT", "TEACHER"].includes(normalizedRole)) {
-      if (!school) {
-        return NextResponse.json(
-          { error: "School code is required for student and teacher registration" },
-          { status: 400 }
-        );
-      }
+    if (["STUDENT", "TEACHER"].includes(normalizedRole) && !school) {
+      return NextResponse.json({ error: "School code is required for student and teacher registration" }, { status: 400 });
     }
 
     if (["ADMIN", "SCHOOL_ADMIN"].includes(normalizedRole) && !school) {
-      return NextResponse.json(
-        { error: "School code is required for admin and school admin registration" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "School code is required for admin and school admin registration" }, { status: 400 });
     }
 
     let classRoom = null;
     if (classRoomId) {
-      classRoom = await prisma.classRoom.findUnique({
-        where: { id: classRoomId },
-      });
+      classRoom = await prisma.classRoom.findUnique({ where: { id: classRoomId } });
       if (!classRoom || (school && classRoom.schoolId !== school.id)) {
-        return NextResponse.json(
-          { error: "Classroom does not belong to the selected school" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Classroom does not belong to the selected school" }, { status: 400 });
       }
     }
 
@@ -179,9 +163,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: user.id,
           schoolId: school?.id,
-          employeeNo:
-            employeeNo ||
-            `TCH-${school?.shortCode ?? "GEN"}-${Date.now().toString().slice(-6)}`,
+          employeeNo: employeeNo || `TCH-${school?.shortCode ?? "GEN"}-${Date.now().toString().slice(-6)}`,
           department: department || undefined,
           classRoomId: classRoomId || undefined,
         },
@@ -192,23 +174,30 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        studentId: student?.id,
-        teacherId: teacher?.id,
-        schoolId: school?.id,
-      },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = signJwtToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      studentId: student?.id,
+      teacherId: teacher?.id,
+      schoolId: school?.id,
+      type: "auth",
+    });
 
-    return NextResponse.json(
+    const verificationToken = signJwtToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      type: "email_verification",
+    }, "1d");
+
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/verify-email?token=${verificationToken}`;
+
+    const response = NextResponse.json(
       {
         success: true,
         token,
+        verificationUrl,
         user: {
           id: user.id,
           email: user.email,
@@ -245,11 +234,18 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   } catch (error) {
     console.error("Register error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

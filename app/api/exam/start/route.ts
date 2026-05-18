@@ -44,11 +44,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
+    const now = new Date();
     if (exam.status !== "PUBLISHED") {
-      return NextResponse.json(
-        { error: "Exam is not available for taking" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Exam is not available for taking" }, { status: 400 });
+    }
+
+    if (exam.startAt && exam.startAt > now) {
+      return NextResponse.json({ error: "Exam has not started yet" }, { status: 400 });
+    }
+
+    if (exam.endAt && exam.endAt < now) {
+      return NextResponse.json({ error: "Exam window has closed" }, { status: 400 });
     }
 
     // Check if student already has an active session for this exam

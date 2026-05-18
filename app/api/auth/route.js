@@ -1,18 +1,5 @@
-import { createToken } from "../../../lib/auth"
+import { NextResponse } from "next/server";
 
-export async function POST(req) {
-  const body = await req.json()
-
-  const user = {
-    id: Date.now(),
-    email: body.email,
-    role: body.role || "student"
-  }
-
-  const token = createToken(user)
-
-  return Response.json({
-    user,
-    token
-  })
+export async function POST() {
+  return NextResponse.json({ error: "Not implemented" }, { status: 404 });
 }
