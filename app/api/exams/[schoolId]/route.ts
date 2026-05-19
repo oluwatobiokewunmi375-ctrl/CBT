@@ -1,14 +1,14 @@
 import { prisma } from '@/lib/prisma'
 import { authenticateToken, createErrorResponse, createSuccessResponse } from '@/lib/auth/middleware'
 
-export async function GET(request: Request, { params }: { params: { schoolId: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ schoolId: string }> }) {
   try {
     const auth = await authenticateToken(request)
     if (!auth) {
       return createErrorResponse('Unauthorized', 401)
     }
 
-    const { schoolId } = params
+    const { schoolId } = await params
 
     const exams = await prisma.exam.findMany({
       where: { schoolId },
@@ -17,12 +17,10 @@ export async function GET(request: Request, { params }: { params: { schoolId: st
         title: true,
         description: true,
         duration: true,
-        totalQuestions: true,
         totalMarks: true,
         status: true,
-        startTime: true,
-        endTime: true,
-        classRoom: { select: { id: true, name: true } },
+        startAt: true,
+        endAt: true,
         subject: { select: { id: true, name: true } },
         _count: {
           select: { questions: true, results: true, sessions: true },
