@@ -123,7 +123,8 @@ export async function GET(req: NextRequest) {
       schoolId = user?.schoolId || undefined;
     }
 
-    if (!schoolId) {
+    // SUPER_ADMIN can view all students or filter by schoolId
+    if (!schoolId && decoded.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: "schoolId query parameter required" },
         { status: 400 }
@@ -131,7 +132,7 @@ export async function GET(req: NextRequest) {
     }
 
     const students = await prisma.student.findMany({
-      where: { schoolId },
+      where: schoolId ? { schoolId } : {}, // Get all students if schoolId is undefined (SUPER_ADMIN)
       include: {
         user: {
           select: {
