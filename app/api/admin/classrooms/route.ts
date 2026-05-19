@@ -99,7 +99,8 @@ export async function GET(req: NextRequest) {
       schoolId = user?.schoolId || undefined;
     }
 
-    if (!schoolId) {
+    // SUPER_ADMIN can view all classrooms or filter by schoolId
+    if (!schoolId && decoded.role !== "SUPER_ADMIN") {
       return NextResponse.json(
         { error: "schoolId query parameter required" },
         { status: 400 }
