@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyToken } from "@/lib/auth/middleware"
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1]
     if (!token) {
@@ -14,10 +14,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
+    const { id } = await params
     const { content, type, marks, optionA, optionB, optionC, optionD, correctAnswer } = await req.json()
 
     const question = await prisma.question.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(content && { content }),
         ...(type && { type }),
