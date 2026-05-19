@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ scho
   }
 }
 
-export async function POST(request: Request, { params }: { params: { schoolId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ schoolId: string }> }) {
   try {
     const auth = await authenticateToken(request)
     if (!auth) {
@@ -47,24 +47,19 @@ export async function POST(request: Request, { params }: { params: { schoolId: s
       return createErrorResponse('Only teachers and admins can create exams', 403)
     }
 
-    const { schoolId } = params
+    const { schoolId } = await params
     const body = await request.json()
     const {
       title,
       description,
-      instructions,
       subjectId,
-      classRoomId,
       duration,
-      totalQuestions,
       totalMarks,
-      passingMarks,
-      startTime,
-      endTime,
-      settings,
+      startAt,
+      endAt,
     } = body
 
-    if (!title || !subjectId || !classRoomId || !duration || !totalMarks) {
+    if (!title || !subjectId || !duration || !totalMarks) {
       return createErrorResponse('Missing required fields', 400)
     }
 
@@ -80,22 +75,17 @@ export async function POST(request: Request, { params }: { params: { schoolId: s
       data: {
         title,
         description,
-        instructions,
         schoolId,
         subjectId,
-        classRoomId,
         createdById: teacher.id,
         duration,
-        totalQuestions,
         totalMarks,
-        passingMarks,
-        startTime: startTime ? new Date(startTime) : undefined,
-        endTime: endTime ? new Date(endTime) : undefined,
-        ...settings,
+        startAt: startAt ? new Date(startAt) : undefined,
+        endAt: endAt ? new Date(endAt) : undefined,
       },
       include: {
-        classRoom: true,
         subject: true,
+        _count: { select: { questions: true, results: true, sessions: true } },
       },
     })
 

@@ -4,7 +4,7 @@ import { verifyToken } from "@/lib/auth/middleware";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { examId: string } }
+  { params }: { params: Promise<{ examId: string }> }
 ) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1];
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { examId } = params;
+    const { examId } = await params;
     if (!examId) {
       return NextResponse.json(
         { error: "Exam ID is required" },
