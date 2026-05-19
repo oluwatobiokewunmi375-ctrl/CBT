@@ -23,14 +23,25 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-    if (!user) {
-      return NextResponse.json({ error: "Invalid reset token" }, { status: 400 });
+    if (!user || !user.passwordResetRequestedAt) {
+      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
+    }
+
+    const tokenIssuedAt = decoded.issuedAt ? new Date(decoded.issuedAt) : null;
+    const requestedAtSeconds = Math.floor(user.passwordResetRequestedAt.getTime() / 1000);
+    const tokenIssuedAtSeconds = tokenIssuedAt ? Math.floor(tokenIssuedAt.getTime() / 1000) : 0;
+
+    if (!tokenIssuedAt || tokenIssuedAtSeconds < requestedAtSeconds) {
+      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
     }
 
     const hashedPassword = await hash(parsed.data.password, 12);
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        passwordResetRequestedAt: null,
+      },
     });
 
     return NextResponse.json({ success: true, message: "Password updated successfully." });

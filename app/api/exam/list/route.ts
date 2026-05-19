@@ -33,12 +33,19 @@ export async function GET(req: NextRequest) {
       where: {
         schoolId: student.schoolId,
         status: "PUBLISHED",
-        startAt: {
-          lte: now,
-        },
-        OR: [
-          { endAt: null },
-          { endAt: { gte: now } },
+        AND: [
+          {
+            OR: [
+              { startAt: null },
+              { startAt: { lte: now } },
+            ],
+          },
+          {
+            OR: [
+              { endAt: null },
+              { endAt: { gte: now } },
+            ],
+          },
         ],
       },
       select: {

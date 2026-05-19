@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyJwtToken } from "@/lib/auth/jwt";
 
 const publicPaths = [
   "/login",
   "/signup",
   "/forgot-password",
+  "/reset-password",
+  "/verify-email",
   "/api/auth",
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/logout",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
   "/api/auth/verify-email",
@@ -30,6 +34,22 @@ export function middleware(req: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
+  }
+
+  const decoded = verifyJwtToken(token);
+  if (!decoded) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("from", pathname);
+    const response = NextResponse.redirect(url);
+    response.cookies.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      sameSite: "strict",
+      maxAge: 0,
+    });
+    return response;
   }
 
   return NextResponse.next();

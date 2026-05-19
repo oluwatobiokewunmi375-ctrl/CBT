@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import { verifyJwtToken } from "@/lib/auth/jwt";
 import { z } from "zod";
 
@@ -19,7 +20,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid or expired verification token" }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, message: "Email verification token is valid." });
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user) {
+      return NextResponse.json({ error: "Invalid verification token" }, { status: 400 });
+    }
+
+    if (user.emailVerified) {
+      return NextResponse.json({ success: true, message: "Email address is already verified." });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
+    });
+
+    return NextResponse.json({ success: true, message: "Email verified successfully." });
   } catch (error) {
     console.error("Verify email error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

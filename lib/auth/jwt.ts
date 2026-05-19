@@ -11,6 +11,7 @@ export type AuthTokenPayload = {
   teacherId?: string;
   schoolId?: string;
   type?: "auth" | "password_reset" | "email_verification";
+  issuedAt?: string;
   expiresAt?: string;
 };
 
@@ -36,6 +37,7 @@ export function verifyJwtToken(token: string): AuthTokenPayload | null {
       teacherId: decoded.teacherId ? String(decoded.teacherId) : undefined,
       schoolId: decoded.schoolId ? String(decoded.schoolId) : undefined,
       type: decoded.type ? String(decoded.type) as AuthTokenPayload["type"] : "auth",
+      issuedAt: typeof decoded.iat === "number" ? new Date(decoded.iat * 1000).toISOString() : undefined,
       expiresAt: typeof decoded.exp === "number" ? new Date(decoded.exp * 1000).toISOString() : undefined,
     };
   } catch {

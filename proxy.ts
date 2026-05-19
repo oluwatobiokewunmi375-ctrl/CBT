@@ -14,7 +14,7 @@ const publicPaths = [
   '/api/health',
 ]
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {

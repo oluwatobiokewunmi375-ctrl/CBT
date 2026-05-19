@@ -32,6 +32,8 @@ model User {
   password String
   fullName String?
   role     Role     @default(STUDENT)
+  emailVerified Boolean @default(false)
+  passwordResetRequestedAt DateTime?
 
   student Student?
   schoolId String?

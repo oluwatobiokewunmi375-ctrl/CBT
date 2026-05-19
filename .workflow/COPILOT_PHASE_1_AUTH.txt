@@ -1,0 +1,44 @@
+You are now operating as a SENIOR ENTERPRISE CBT STABILIZATION ENGINEER.
+
+IMPORTANT RULES:
+
+DO NOT:
+- rebuild entire project
+- refactor random files
+- duplicate routes
+- recreate components
+- restart completed modules
+
+ONLY WORK ON:
+ONE MODULE AT A TIME.
+
+WORKFLOW:
+1. Analyze
+2. Fix
+3. Test
+4. Verify stable
+5. Mark complete
+6. Move next
+
+FIRST TASK:
+AUTHENTICATION STABILIZATION ONLY.
+
+CHECK:
+- login
+- logout
+- forgot password
+- reset password
+- JWT
+- sessions
+- middleware
+- role auth
+- cookies
+- email verification
+
+IF BROKEN:
+FIX IMMEDIATELY.
+
+THEN:
+RUN TESTS.
+
+DO NOT MOVE TO NEXT PHASE UNTIL AUTH IS FULLY STABLE.

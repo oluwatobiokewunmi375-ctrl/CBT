@@ -57,6 +57,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid student ID" }, { status: 401 });
       }
 
+      if (process.env.REQUIRE_EMAIL_VERIFICATION === "true" && !student.user.emailVerified) {
+        return NextResponse.json(
+          { error: "Email not verified. Please verify your account before signing in." },
+          { status: 403 }
+        );
+      }
+
       user = student.user;
     } else {
       user = await prisma.user.findUnique({
@@ -80,6 +87,13 @@ export async function POST(req: NextRequest) {
 
       if (!user) {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
+
+      if (process.env.REQUIRE_EMAIL_VERIFICATION === "true" && !user.emailVerified) {
+        return NextResponse.json(
+          { error: "Email not verified. Please verify your account before signing in." },
+          { status: 403 }
+        );
       }
 
       if (!password || !(await compare(password, user.password))) {

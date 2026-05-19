@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: "If that email exists, a reset link has been issued." });
     }
 
+    const resetIssuedAt = new Date();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetRequestedAt: resetIssuedAt },
+    });
+
     const token = signJwtToken(
       {
         id: user.id,
