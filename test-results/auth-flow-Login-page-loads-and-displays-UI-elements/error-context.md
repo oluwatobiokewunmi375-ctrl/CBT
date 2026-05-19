@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: login.spec.ts >> Login page UI and redirect flows
-- Location: tests-e2e\login.spec.ts:3:1
+- Name: auth-flow.spec.ts >> Login page loads and displays UI elements
+- Location: tests-e2e\auth-flow.spec.ts:15:1
 
 # Error details
 

@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { ArrowRight, Zap, BarChart3, Shield, Users, Clock, CheckCircle } from 'lucide-react'
 
 export default function LandingPage() {
@@ -78,12 +77,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
+          <div className="text-center">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
                 Modern CBT Platform
@@ -92,7 +86,7 @@ export default function LandingPage() {
               for Your School
             </h1>
             <p className="text-xl sm:text-2xl text-slate-400 mb-8 max-w-3xl mx-auto">
-              Conduct secure online exinations with advanced analytics, instant grading,
+              Conduct secure online examinations with advanced analytics, instant grading,
               and detailed performance tracking all in one powerful platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -103,15 +97,10 @@ export default function LandingPage() {
                 Sign In <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </div>
-          </motion.div>
+          </div>
 
           {/* Hero Image/Illustration */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-20 relative"
-          >
+          <div className="mt-20 relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl opacity-20 blur-3xl"></div>
             <div className="relative bg-slate-800/50 border border-slate-700 rounded-2xl p-8 backdrop-blur-sm">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -133,34 +122,24 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">Powerful Features</h2>
             <p className="text-xl text-slate-400">Everything you need to run a professional CBT program</p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => {
               const Icon = feature.icon
               return (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
                   className="group p-6 rounded-xl border border-slate-700 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50 transition"
                 >
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 mb-4 group-hover:scale-110 transition">
@@ -168,7 +147,7 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                   <p className="text-slate-400">{feature.description}</p>
-                </motion.div>
+                </div>
               )
             })}
           </div>
@@ -178,25 +157,15 @@ export default function LandingPage() {
       {/* Testimonials Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">Trusted by Schools</h2>
             <p className="text-xl text-slate-400">See what educators are saying about our platform</p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
                 className="p-6 rounded-xl border border-slate-700 bg-slate-800/30"
               >
                 <p className="text-slate-300 mb-4 italic">"{testimonial.message}"</p>
@@ -204,7 +173,7 @@ export default function LandingPage() {
                   <p className="font-semibold">{testimonial.name}</p>
                   <p className="text-sm text-slate-400">{testimonial.school}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -212,13 +181,7 @@ export default function LandingPage() {
 
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto text-center"
-        >
+        <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">Ready to Transform Your Exams?</h2>
           <p className="text-xl text-slate-400 mb-8">
             Join hundreds of schools using CBT Pro for secure, efficient, and effective online examinations.
@@ -237,7 +200,7 @@ export default function LandingPage() {
               Contact Support
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
@@ -261,29 +224,24 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
+              <h3 className="font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-slate-400">
-                <li><Link href="#" className="hover:text-white transition">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-white transition">Terms</Link></li>
-                <li><Link href="#" className="hover:text-white transition">Cookie Policy</Link></li>
+                <li><Link href="#" className="hover:text-white transition">Docs</Link></li>
+                <li><Link href="#" className="hover:text-white transition">Support</Link></li>
+                <li><Link href="#" className="hover:text-white transition">FAQ</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Connect</h3>
-              <ul className="space-y-2 text-slate-400">
-                <li><Link href="#" className="hover:text-white transition">Twitter</Link></li>
-                <li><Link href="#" className="hover:text-white transition">LinkedIn</Link></li>
-                <li><Link href="#" className="hover:text-white transition">Facebook</Link></li>
-              </ul>
+              <h3 className="font-semibold mb-4">Contact</h3>
+              <p className="text-slate-400">support@cbtpro.com</p>
+              <p className="text-slate-400">+1 800 123 4567</p>
             </div>
           </div>
-          <div className="border-t border-slate-800 pt-8 flex justify-between items-center text-slate-400 text-sm">
-            <p>&copy; 2026 CBT Pro. All rights reserved.</p>
-            <p>Made with ❤️ for educators</p>
+          <div className="text-center text-slate-500">
+            © 2026 CBT Pro. All rights reserved.
           </div>
         </div>
       </footer>
     </main>
   )
 }
-

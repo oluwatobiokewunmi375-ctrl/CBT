@@ -17,37 +17,88 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply bg-slate-950 text-slate-100;
+    background-color: #0f172a;
+    color: #f8fafc;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium;
+    padding: 0.5rem 1rem;
+    background-color: #2563eb;
+    color: #ffffff;
+    border-radius: 0.75rem;
+    transition: background-color 0.2s ease-in-out;
+    font-weight: 500;
+  }
+
+  .btn-primary:hover {
+    background-color: #1d4ed8;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium;
+    padding: 0.5rem 1rem;
+    background-color: #374151;
+    color: #ffffff;
+    border-radius: 0.75rem;
+    transition: background-color 0.2s ease-in-out;
+    font-weight: 500;
+  }
+
+  .btn-secondary:hover {
+    background-color: #27272a;
   }
 
   .btn-danger {
-    @apply px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium;
+    padding: 0.5rem 1rem;
+    background-color: #dc2626;
+    color: #ffffff;
+    border-radius: 0.75rem;
+    transition: background-color 0.2s ease-in-out;
+    font-weight: 500;
+  }
+
+  .btn-danger:hover {
+    background-color: #b91c1c;
   }
 
   .card {
-    @apply bg-slate-900 rounded-xl p-6 border border-slate-800;
+    background-color: #0f172a;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #1f2937;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    background-color: #0f172a;
+    border: 1px solid #374151;
+    border-radius: 0.75rem;
+    color: #ffffff;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .input-field::placeholder {
+    color: #94a3b8;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
   }
 
   .form-group {
-    @apply mb-4;
+    margin-bottom: 1rem;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-300 mb-2;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
   }
 }
 
