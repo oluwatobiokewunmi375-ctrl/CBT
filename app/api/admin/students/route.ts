@@ -158,34 +158,6 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, students });
-
-    const students = await prisma.student.findMany({
-      where: schoolId ? { schoolId } : {}, // Get all students if schoolId is undefined (SUPER_ADMIN)
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-            role: true,
-          },
-        },
-        school: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        ClassRoom: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json({ success: true, students });
   } catch (error) {
     console.error("Get students error:", error);
     return NextResponse.json(
