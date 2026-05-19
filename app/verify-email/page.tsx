@@ -1,19 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams()
   const [token, setToken] = useState("")
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
 
   useEffect(() => {
-    const tokenParam = searchParams?.get("token") || ""
+    if (typeof window === "undefined") return
+    const tokenParam = new URLSearchParams(window.location.search).get("token") || ""
     setToken(tokenParam)
-  }, [searchParams])
+  }, [])
 
   useEffect(() => {
     const verifyToken = async () => {
