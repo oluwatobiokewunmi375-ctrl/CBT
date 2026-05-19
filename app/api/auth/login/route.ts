@@ -17,7 +17,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
     }
 
-    const parsed = loginSchema.safeParse(await req.json());
+    let body: any = null
+    try {
+      body = await req.json()
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid or empty JSON body' }, { status: 400 })
+    }
+
+    const parsed = loginSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
