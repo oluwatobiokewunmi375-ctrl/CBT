@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
             name: true,
           },
         },
-        classRoom: {
+        ClassRoom: {
           select: {
             id: true,
             name: true,
