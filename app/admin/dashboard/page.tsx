@@ -12,6 +12,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
+  const [profile, setProfile] = useState<any>(null)
 
   // Form states
   const [newStudent, setNewStudent] = useState({
@@ -34,17 +35,30 @@ export default function AdminDashboardPage() {
     }
   }, [activeTab])
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const res = await fetch('/api/auth/profile')
+        if (res.ok) {
+          const data = await res.json()
+          setProfile(data.profile)
+        }
+      } catch (err) {
+        console.error('Failed to load profile', err)
+      }
+    }
+
+    loadProfile()
+  }, [])
+
   const fetchDashboard = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) {
+      const res = await fetch("/api/admin/dashboard")
+
+      if (res.status === 401) {
         setError("Not authenticated")
         return
       }
-
-      const res = await fetch("/api/admin/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
 
       if (res.ok) {
         const data = await res.json()
@@ -64,11 +78,8 @@ export default function AdminDashboardPage() {
 
   const fetchStudents = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-      const res = await fetch("/api/admin/students", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch("/api/admin/students")
+      if (res.status === 401) return
 
       if (res.ok) {
         const data = await res.json()
@@ -81,11 +92,8 @@ export default function AdminDashboardPage() {
 
   const fetchTeachers = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-      const res = await fetch("/api/admin/teachers", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch("/api/admin/teachers")
+      if (res.status === 401) return
 
       if (res.ok) {
         const data = await res.json()
@@ -98,11 +106,8 @@ export default function AdminDashboardPage() {
 
   const fetchClassrooms = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-      const res = await fetch("/api/admin/classrooms", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch("/api/admin/classrooms")
+      if (res.status === 401) return
 
       if (res.ok) {
         const data = await res.json()
@@ -115,18 +120,20 @@ export default function AdminDashboardPage() {
 
   const createStudent = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
-      const parsedUser = rawUser ? JSON.parse(rawUser) : null
+      const userSchoolId = profile?.school?.id
+      if (!userSchoolId) {
+        setError('School context missing')
+        return
+      }
+
       const res = await fetch("/api/admin/students", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...newStudent,
-          schoolId: parsedUser?.school?.id,
+          schoolId: userSchoolId,
         }),
       })
 
@@ -145,18 +152,20 @@ export default function AdminDashboardPage() {
 
   const createTeacher = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
-      const parsedUser = rawUser ? JSON.parse(rawUser) : null
+      const userSchoolId = profile?.school?.id
+      if (!userSchoolId) {
+        setError('School context missing')
+        return
+      }
+
       const res = await fetch("/api/admin/teachers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...newTeacher,
-          schoolId: parsedUser?.school?.id,
+          schoolId: userSchoolId,
         }),
       })
 
@@ -175,18 +184,20 @@ export default function AdminDashboardPage() {
 
   const createClassroom = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null
-      const parsedUser = rawUser ? JSON.parse(rawUser) : null
+      const userSchoolId = profile?.school?.id
+      if (!userSchoolId) {
+        setError('School context missing')
+        return
+      }
+
       const res = await fetch("/api/admin/classrooms", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...newClassroom,
-          schoolId: parsedUser?.school?.id,
+          schoolId: userSchoolId,
         }),
       })
 

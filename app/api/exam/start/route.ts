@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -67,15 +62,50 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingSession) {
+      const computedExpiresAt = existingSession.expiresAt
+        ? existingSession.expiresAt
+        : new Date(
+            Math.min(
+              existingSession.startedAt.getTime() + exam.duration * 1000,
+              exam.endAt ? exam.endAt.getTime() : Infinity
+            )
+          );
+
+      if (computedExpiresAt <= now) {
+        await prisma.session.update({
+          where: { id: existingSession.id },
+          data: { status: "EXPIRED", expiresAt: computedExpiresAt },
+        });
+
+        return NextResponse.json(
+          { error: "Exam session has expired" },
+          { status: 400 }
+        );
+      }
+
+      if (!existingSession.expiresAt) {
+        await prisma.session.update({
+          where: { id: existingSession.id },
+          data: { expiresAt: computedExpiresAt },
+        });
+      }
+
       return NextResponse.json(
         { 
           success: true, 
-          session: existingSession,
+          session: { ...existingSession, expiresAt: computedExpiresAt },
           message: "Resuming existing session"
         },
         { status: 200 }
       );
     }
+
+    const expiresAt = new Date(
+      Math.min(
+        now.getTime() + exam.duration * 1000,
+        exam.endAt ? exam.endAt.getTime() : Infinity
+      )
+    );
 
     // Create new session
     const session = await prisma.session.create({
@@ -85,7 +115,8 @@ export async function POST(req: NextRequest) {
         status: "ACTIVE",
         ipAddress,
         deviceInfo,
-        startedAt: new Date(),
+        startedAt: now,
+        expiresAt,
       },
     });
 
@@ -99,6 +130,7 @@ export async function POST(req: NextRequest) {
           status: session.status,
           startedAt: session.startedAt,
           expiresAt: session.expiresAt,
+          version: session.version,
         }
       },
       { status: 201 }
@@ -114,12 +146,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }

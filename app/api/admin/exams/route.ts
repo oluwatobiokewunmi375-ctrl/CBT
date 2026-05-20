@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -93,12 +88,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
@@ -136,13 +126,11 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
-
-    const decoded = verifyToken(token);
-    if (!decoded || decoded.role !== "TEACHER") {
+    if (decoded.role !== "TEACHER") {
       return NextResponse.json(
         { error: "Only teachers can update exams" },
         { status: 403 }

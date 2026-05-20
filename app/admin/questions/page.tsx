@@ -43,15 +43,12 @@ export default function AdminQuestionsPage() {
 
   const fetchQuestions = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
+      const res = await fetch('/api/admin/questions')
+
+      if (res.status === 401) {
         safeNavigate(router, '/login')
         return
       }
-
-      const res = await fetch('/api/admin/questions', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
 
       if (res.ok) {
         const data = await res.json()
@@ -82,12 +79,6 @@ export default function AdminQuestionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        safeNavigate(router, '/login')
-        return
-      }
-
       const url = editingId
         ? `/api/admin/questions/${editingId}`
         : '/api/admin/questions'
@@ -96,11 +87,15 @@ export default function AdminQuestionsPage() {
       const res = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData),
       })
+
+      if (res.status === 401) {
+        safeNavigate(router, '/login')
+        return
+      }
 
       if (res.ok) {
         toast.success(editingId ? 'Question updated' : 'Question created')
@@ -134,11 +129,14 @@ export default function AdminQuestionsPage() {
     if (!confirm('Delete this question?')) return
 
     try {
-      const token = localStorage.getItem('token')
       const res = await fetch(`/api/admin/questions/${questionId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        method: 'DELETE'
       })
+
+      if (res.status === 401) {
+        safeNavigate(router, '/login')
+        return
+      }
 
       if (res.ok) {
         toast.success('Question deleted')

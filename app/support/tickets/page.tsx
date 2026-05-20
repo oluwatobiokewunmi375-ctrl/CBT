@@ -12,9 +12,7 @@ export default function SupportTicketsPage() {
 
   const fetchTickets = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-      const res = await fetch('/api/support', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('/api/support')
       if (res.ok) {
         const data = await res.json()
         setTickets(data.tickets || [])

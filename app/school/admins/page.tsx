@@ -20,12 +20,8 @@ export default function SchoolAdminsPage() {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
-
-      const res = await fetch('/api/school/admins', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/api/school/admins')
+      if (res.status === 401) return safeNavigate(router, '/login')
 
       if (res.ok) {
         const data = await res.json()
@@ -53,12 +49,9 @@ export default function SchoolAdminsPage() {
     if (Object.keys(errors).length > 0) return
 
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
-
       const res = await fetch('/api/school/admins', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
 
@@ -80,12 +73,8 @@ export default function SchoolAdminsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this admin?')) return
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
-
       const res = await fetch(`/api/school/admins/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {

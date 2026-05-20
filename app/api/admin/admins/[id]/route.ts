@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decoded = verifyToken(token);
-    if (!decoded || decoded.role !== "SUPER_ADMIN") {
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) {
+      return NextResponse.json({ error: "Unauthorized - super admin required" }, { status: 401 });
+    }
+    if (decoded.role !== "SUPER_ADMIN") {
       return NextResponse.json({ error: "Unauthorized - super admin required" }, { status: 403 });
     }
 

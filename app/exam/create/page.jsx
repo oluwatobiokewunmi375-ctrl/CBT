@@ -9,16 +9,25 @@ export default function CreateExam() {
   const [redirected, setRedirected] = useState(false)
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (!token) {
-      safeNavigate(router, '/login')
-      return
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/profile')
+        if (!res.ok) {
+          safeNavigate(router, '/login')
+          return
+        }
+      } catch (err) {
+        safeNavigate(router, '/login')
+        return
+      }
 
       setTimeout(() => {
         setRedirected(true)
         safeNavigate(router, '/admin/exams/create')
       }, 100)
+    }
+
+    checkAuth()
   }, [router])
 
   return (

@@ -238,6 +238,7 @@ model Session {
   status           String    @default("ACTIVE")
   startedAt        DateTime  @default(now())
   lastSavedAt      DateTime?
+  version          Int       @default(1)
   completedAt      DateTime?
   timeTakenSeconds Int?
   answersJson      Json? // store answers as JSON for resume

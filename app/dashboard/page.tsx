@@ -35,29 +35,33 @@ export default function StudentDashboard() {
   })
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    const token = localStorage.getItem('token')
-
-    if (!storedUser || !token) {
-      safeNavigate(router, '/login')
-      return
-    }
-
-    const parsedUser = JSON.parse(storedUser)
-    setUser(parsedUser)
-
-    const schoolId = parsedUser?.school?.id
-    if (!schoolId) {
-      toast.error('School context missing for exam discovery')
-      setLoading(false)
-      return
-    }
-
     const loadData = async () => {
       try {
+        const profileRes = await fetch('/api/auth/profile')
+
+        if (profileRes.status === 401) {
+          safeNavigate(router, '/login')
+          return
+        }
+
+        if (!profileRes.ok) {
+          throw new Error('Unable to load profile')
+        }
+
+        const profileBody = await profileRes.json()
+        const parsedUser = profileBody.profile
+        setUser(parsedUser)
+
+        const schoolId = parsedUser?.school?.id
+        if (!schoolId) {
+          toast.error('School context missing for exam discovery')
+          setLoading(false)
+          return
+        }
+
         const [examList, resultList] = await Promise.all([
-          fetchExams(schoolId, token),
-          fetchResults(token),
+          fetchExams(schoolId),
+          fetchResults(),
         ])
 
         const attemptedExamIds = new Set(resultList.map((result: any) => result.examId))
@@ -84,11 +88,9 @@ export default function StudentDashboard() {
     loadData()
   }, [router])
 
-  const fetchExams = async (schoolId: string, token: string) => {
+  const fetchExams = async (schoolId: string) => {
     try {
-      const res = await fetch(`/api/exams/${schoolId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(`/api/exams/${schoolId}`)
 
       if (!res.ok) {
         throw new Error('Failed to load exams')
@@ -105,11 +107,9 @@ export default function StudentDashboard() {
     }
   }
 
-  const fetchResults = async (token: string) => {
+  const fetchResults = async () => {
     try {
-      const res = await fetch('/api/results/list', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/api/results/list')
 
       if (!res.ok) {
         throw new Error('Failed to load results')
@@ -126,9 +126,8 @@ export default function StudentDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
     toast.success('Logged out successfully')
     safeNavigate(router, '/')
   }

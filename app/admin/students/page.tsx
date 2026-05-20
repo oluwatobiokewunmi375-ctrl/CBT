@@ -21,25 +21,39 @@ export default function AdminStudentsPage() {
     gender: '',
   })
   const [classrooms, setClassrooms] = useState<any[]>([])
+  const [profile, setProfile] = useState<any>(null)
 
   useEffect(() => {
-    fetchStudents()
-    fetchClassrooms()
-  }, [])
+    const loadData = async () => {
+      try {
+        const profileRes = await fetch('/api/auth/profile')
+        if (profileRes.status === 401) {
+          safeNavigate(router, '/login')
+          return
+        }
+
+        if (!profileRes.ok) {
+          throw new Error('Unable to load profile')
+        }
+
+        const profileBody = await profileRes.json()
+        setProfile(profileBody.profile)
+
+        await Promise.all([fetchStudents(), fetchClassrooms()])
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to load dashboard')
+      }
+    }
+
+    loadData()
+  }, [router])
 
   const fetchStudents = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        safeNavigate(router, '/login')
-        return
+      const res = await fetch('/api/admin/students')
+      if (res.status === 401) {
+        return safeNavigate(router, '/login')
       }
-
-      const res = await fetch('/api/admin/students', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
 
       if (res.ok) {
         const data = await res.json()
@@ -57,17 +71,10 @@ export default function AdminStudentsPage() {
 
   const fetchClassrooms = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        safeNavigate(router, '/login')
-        return
+      const res = await fetch('/api/admin/classrooms')
+      if (res.status === 401) {
+        return safeNavigate(router, '/login')
       }
-
-      const res = await fetch('/api/admin/classrooms', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
 
       if (res.ok) {
         const data = await res.json()
@@ -81,24 +88,20 @@ export default function AdminStudentsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
+      const userSchoolId = profile?.school?.id
+      if (!userSchoolId) {
         safeNavigate(router, '/login')
         return
       }
-
-      const rawUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
-      const parsedUser = rawUser ? JSON.parse(rawUser) : null
 
       const res = await fetch('/api/admin/students', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...formData,
-          schoolId: parsedUser?.school?.id,
+          schoolId: userSchoolId,
         }),
       })
 

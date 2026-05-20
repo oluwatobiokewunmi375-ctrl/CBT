@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 import { hash } from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 403 });
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
     const body = await req.json();
     const { email, password, fullName, role } = body;
@@ -59,11 +56,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 403 });
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
     // Allow SUPER_ADMIN to optionally pass ?schoolId= to inspect other schools
     let schoolId = decoded.schoolId;

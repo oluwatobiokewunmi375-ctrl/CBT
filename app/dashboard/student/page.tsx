@@ -16,39 +16,32 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token")
-        if (!token) {
-          safeNavigate(router, "/login")
+        const profileRes = await fetch('/api/auth/profile')
+        if (profileRes.status === 401) {
+          safeNavigate(router, '/login')
           return
         }
 
-        // Fetch profile
-        const profileRes = await fetch("/api/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (profileRes.ok) {
-          setProfile(await profileRes.json())
+        if (!profileRes.ok) {
+          throw new Error('Unable to load profile')
         }
 
-        // Fetch available exams
-        const examsRes = await fetch("/api/exam/list", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const profileData = await profileRes.json()
+        setProfile(profileData.profile)
+
+        const examsRes = await fetch('/api/exam/list')
         if (examsRes.ok) {
           const data = await examsRes.json()
           setExams(data.exams || [])
         }
 
-        // Fetch results
-        const resultsRes = await fetch("/api/results/list", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const resultsRes = await fetch('/api/results/list')
         if (resultsRes.ok) {
           const data = await resultsRes.json()
           setResults(data.results || [])
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error loading data")
+        setError(err instanceof Error ? err.message : 'Error loading data')
       } finally {
         setLoading(false)
       }
@@ -90,9 +83,9 @@ export default function StudentDashboard() {
               </p>
             </div>
             <button
-              onClick={() => {
-                localStorage.removeItem("token")
-                safeNavigate(router, "/login")
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' })
+                safeNavigate(router, '/login')
               }}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
             >

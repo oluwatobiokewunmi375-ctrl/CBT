@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> forgot password and reset password flow
-- Location: tests-e2e\enterprise-flow.spec.ts:91:3
+- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> school admin login and admin dashboard
+- Location: tests-e2e\enterprise-flow.spec.ts:50:3
 
 # Error details
 
@@ -16,9 +16,9 @@ Test timeout of 30000ms exceeded.
 ```
 
 ```
-Error: locator.fill: Test timeout of 30000ms exceeded.
+Error: locator.click: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for getByPlaceholder('Enter your email')
+  - waiting for getByRole('button', { name: 'Dashboard Access' })
 
 ```
 
@@ -45,7 +45,8 @@ Call log:
   12  | 
   13  | async function loginDashboard(page, email, password) {
   14  |   await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
-  15  |   await page.getByRole('button', { name: 'Dashboard Access' }).click()
+> 15  |   await page.getByRole('button', { name: 'Dashboard Access' }).click()
+      |                                                                ^ Error: locator.click: Test timeout of 30000ms exceeded.
   16  |   await page.getByPlaceholder('you@example.com').fill(email)
   17  |   await page.getByPlaceholder('••••••••').fill(password)
   18  |   await Promise.all([
@@ -123,8 +124,7 @@ Call log:
   90  | 
   91  |   test('forgot password and reset password flow', async ({ page }) => {
   92  |     await page.goto(`${baseUrl}/forgot-password`, { waitUntil: 'load' })
-> 93  |     await page.getByPlaceholder('Enter your email').fill('student1@test.com')
-      |                                                     ^ Error: locator.fill: Test timeout of 30000ms exceeded.
+  93  |     await page.getByPlaceholder('Enter your email').fill('student1@test.com')
   94  |     await page.getByRole('button', { name: 'Send Reset Link' }).click()
   95  | 
   96  |     const resetLink = await page.locator('a[href*="/reset-password?token="]').first()
@@ -147,12 +147,4 @@ Call log:
   113 |     await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
   114 |     await page.getByRole('button', { name: 'Dashboard Access' }).click()
   115 |     await page.getByPlaceholder('you@example.com').fill('student1@test.com')
-  116 |     await page.getByPlaceholder('••••••••').fill('newstudent123')
-  117 |     await Promise.all([
-  118 |       page.waitForURL(/\/dashboard/, { timeout: 20000 }),
-  119 |       page.getByRole('button', { name: 'Go to Dashboard' }).click(),
-  120 |     ])
-  121 |   })
-  122 | })
-  123 | 
 ```

@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { verifyToken } from "@/lib/auth/middleware"
+import { verifyTokenFromRequest } from "@/lib/auth/middleware"
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1]
-    if (!token) {
+    const decoded = verifyTokenFromRequest(req)
+    if (!decoded) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const decoded = verifyToken(token)
-    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
+    if (!["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
@@ -40,13 +38,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1]
-    if (!token) {
+    const decoded = verifyTokenFromRequest(req)
+    if (!decoded) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const decoded = verifyToken(token)
-    if (!decoded || !["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
+    if (!["ADMIN", "SCHOOL_ADMIN", "TEACHER", "SUPER_ADMIN"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 

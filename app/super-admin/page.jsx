@@ -36,10 +36,7 @@ export default function SuperAdmin() {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const res = await fetch("/api/admin/admins", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch("/api/admin/admins")
       if (res.ok) {
         const data = await res.json()
         setAdmins(data.admins || [])
@@ -87,12 +84,10 @@ export default function SuperAdmin() {
 
     setLoading(true)
     try {
-      const token = localStorage.getItem("token")
       const res = await fetch("/api/admin/admins", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: adminEmail,

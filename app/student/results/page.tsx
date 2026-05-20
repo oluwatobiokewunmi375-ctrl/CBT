@@ -18,15 +18,12 @@ export default function StudentResultsPage() {
 
   const fetchResults = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
+      const res = await fetch('/api/results/list')
+
+      if (res.status === 401) {
         safeNavigate(router, '/login')
         return
       }
-
-      const res = await fetch('/api/results/list', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
 
       if (res.ok) {
         const data = await res.json()

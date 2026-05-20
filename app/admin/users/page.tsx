@@ -21,12 +21,11 @@ export default function AdminUsersPage() {
 
   const fetchAdmins = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
+      const res = await fetch('/api/admin/admins')
 
-      const res = await fetch('/api/admin/admins', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      if (res.status === 401) {
+        return safeNavigate(router, '/login')
+      }
 
       if (res.ok) {
         const data = await res.json()
@@ -44,11 +43,7 @@ export default function AdminUsersPage() {
 
   const fetchSchools = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-      const res = await fetch('/api/school', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/api/school')
       if (res.ok) {
         const data = await res.json()
         setSchools(data.schools || [])
@@ -61,12 +56,9 @@ export default function AdminUsersPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
-
       const res = await fetch('/api/admin/admins', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
 
@@ -87,12 +79,8 @@ export default function AdminUsersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this admin?')) return
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return safeNavigate(router, '/login')
-
       const res = await fetch(`/api/admin/admins/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
 
       if (res.ok) {

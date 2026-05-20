@@ -12,37 +12,29 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem("token")
-        if (!token) {
-          setError("Not authenticated")
-          return
-        }
-
-        // Fetch student profile
-        const profileRes = await fetch("/api/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-
-        if (profileRes.ok) {
+        // Rely on httpOnly cookie (JWT) sent by browser; don't use localStorage
+        const profileRes = await fetch('/api/auth/profile')
+        if (!profileRes.ok) {
+          if (profileRes.status === 401) {
+            setError('Not authenticated')
+            return
+          }
+        } else {
           const profileData = await profileRes.json()
-          setStudent(profileData.profile.student)
+          setStudent(profileData.profile?.student || null)
         }
 
         // Fetch student results
-        const resultsRes = await fetch("/api/results/list", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const resultsRes = await fetch('/api/results/list')
 
         if (resultsRes.ok) {
           const resultsData = await resultsRes.json()
           setResults(resultsData.results || [])
         }
 
-        const schoolId = profileData.profile.student?.school?.id
+        const schoolId = (await profileRes.clone().json()).profile?.student?.school?.id
         if (schoolId) {
-          const examsRes = await fetch(`/api/exams/${schoolId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+          const examsRes = await fetch(`/api/exams/${schoolId}`)
 
           if (examsRes.ok) {
             const examsData = await examsRes.json()

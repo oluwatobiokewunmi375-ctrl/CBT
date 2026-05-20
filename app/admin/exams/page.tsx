@@ -12,17 +12,14 @@ export default function AdminExamsPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (!token) {
-      safeNavigate(router, '/login')
-      return
-    }
-
     const loadExams = async () => {
       try {
-        const res = await fetch('/api/admin/exams', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await fetch('/api/admin/exams')
+
+        if (res.status === 401) {
+          safeNavigate(router, '/login')
+          return
+        }
 
         if (!res.ok) {
           const data = await res.json()

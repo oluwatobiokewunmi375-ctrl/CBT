@@ -1,21 +1,32 @@
 ﻿import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
 
+// Consolidated auth: use server-side JWT cookie via /api/auth/profile
 export default function useAuth() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user)
-    })
+    let mounted = true
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null)
+    async function load() {
+      try {
+        const res = await fetch('/api/auth/profile')
+        if (!mounted) return
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data?.profile || null)
+        } else {
+          setUser(null)
+        }
+      } catch (err) {
+        if (mounted) setUser(null)
       }
-    )
+    }
 
-    return () => listener.subscription.unsubscribe()
+    load()
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   return user

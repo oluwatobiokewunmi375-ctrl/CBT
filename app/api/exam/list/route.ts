@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function GET(req: NextRequest) {
   try {
     // Verify auth token
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }

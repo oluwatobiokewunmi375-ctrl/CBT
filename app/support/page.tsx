@@ -21,10 +21,9 @@ export default function SupportPage() {
 
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
       const res = await fetch('/api/support', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
 

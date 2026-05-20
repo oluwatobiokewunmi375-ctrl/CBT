@@ -88,17 +88,10 @@ export default function CreateExamPage() {
     setError("")
 
     try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        safeNavigate(router, "/login")
-        return
-      }
-
       const res = await fetch("/api/admin/exams", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title,

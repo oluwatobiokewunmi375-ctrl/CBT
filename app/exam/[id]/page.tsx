@@ -18,21 +18,50 @@ export default function ExamPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [sessionVersion, setSessionVersion] = useState<number>(1)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
+  const syncSessionState = useCallback(
+    (sessionData: any, examData: any) => {
+      if (!sessionData) return
+
+      setSessionId(sessionData.id ?? null)
+
+      const savedAnswers = sessionData.answersJson?.answers || {}
+      setAnswers(savedAnswers)
+
+      const currentQuestionId = sessionData.answersJson?.currentQuestionId
+      const index = examData?.questions?.findIndex(
+        (q: any) => q.id === currentQuestionId
+      )
+      setCurrentQuestion(index >= 0 ? index : 0)
+      setSessionVersion(sessionData.version ?? 1)
+
+      if (sessionData.expiresAt) {
+        const expiresAt = new Date(sessionData.expiresAt)
+        const remainingSeconds = Math.max(
+          0,
+          Math.round((expiresAt.getTime() - Date.now()) / 1000)
+        )
+        setTimeLeft(remainingSeconds)
+      } else if (examData?.duration) {
+        setTimeLeft(examData.duration * 60)
+      }
+    },
+    []
+  )
+
   const fetchExam = useCallback(async () => {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-      if (!token) {
-        safeNavigate(router, "/login")
+      // Use cookie-based JWT supplied by server (httpOnly cookie)
+      const res = await fetch(`/api/exam/${examId}`)
+
+      if (res.status === 401) {
+        safeNavigate(router, '/login')
         return
       }
-
-      const res = await fetch(`/api/exam/${examId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
 
       if (!res.ok) {
         const data = await res.json()
@@ -41,7 +70,6 @@ export default function ExamPage() {
 
       const data = await res.json()
       setExam(data.exam)
-      setTimeLeft(data.exam.duration * 60)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading exam")
     } finally {
@@ -52,18 +80,9 @@ export default function ExamPage() {
   const startSession = useCallback(async () => {
     if (!examId) return
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-      if (!token) {
-        safeNavigate(router, "/login")
-        return
-      }
-
-      const res = await fetch("/api/exam/start", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch('/api/exam/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           examId,
           ipAddress: window.location.hostname,
@@ -71,42 +90,58 @@ export default function ExamPage() {
         }),
       })
 
+      if (res.status === 401) {
+        safeNavigate(router, '/login')
+        return
+      }
+
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || "Unable to start exam session")
       }
 
       const data = await res.json()
-      setSessionId(data.session?.id ?? null)
+      syncSessionState(data.session, exam)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to start exam session"
       setError(message)
       toast.error(message)
     }
-  }, [examId, router])
+  }, [exam, examId, router, syncSessionState])
 
   const saveProgress = useCallback(
     async (currentQuestionId?: string, answersPayload?: Record<string, string>) => {
       if (!sessionId) return
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-        if (!token) {
-          safeNavigate(router, "/login")
-          return
-        }
-
-        await fetch("/api/exam/save-progress", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch('/api/exam/save-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
             answers: answersPayload || answers,
             currentQuestionId,
+            clientUpdatedAt: Date.now(),
+            sessionVersion,
           }),
         })
+
+        if (res.status === 401) {
+          safeNavigate(router, '/login')
+          return
+        }
+
+        if (res.status === 409) {
+          const data = await res.json()
+          if (data.currentVersion) {
+            setSessionVersion(data.currentVersion)
+          }
+          return
+        }
+
+        if (res.ok) {
+          const data = await res.json()
+          setSessionVersion(data.session?.version ?? sessionVersion)
+        }
       } catch (err) {
         console.warn("Progress save failed:", err)
       }
@@ -130,11 +165,7 @@ export default function ExamPage() {
 
   const handleSubmit = useCallback(async () => {
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
-      if (!token) {
-        safeNavigate(router, "/login")
-        return
-      }
+      // Submit using server cookie (httpOnly JWT)
 
       const formattedAnswers: Record<string, string> = {}
 
@@ -142,12 +173,9 @@ export default function ExamPage() {
         formattedAnswers[q.id] = answers[q.id] || ""
       })
 
-      const res = await fetch("/api/exam/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch('/api/exam/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           examId,
           answers: formattedAnswers,
@@ -155,6 +183,11 @@ export default function ExamPage() {
           sessionId,
         }),
       })
+
+      if (res.status === 401) {
+        safeNavigate(router, '/login')
+        return
+      }
 
       if (res.ok) {
         setSubmitted(true)
@@ -196,15 +229,17 @@ export default function ExamPage() {
 
   const handlePrevious = async () => {
     if (currentQuestion > 0) {
+      const nextQuestionId = exam.questions[currentQuestion - 1]?.id
       setCurrentQuestion(currentQuestion - 1)
-      await saveProgress()
+      await saveProgress(nextQuestionId)
     }
   }
 
   const handleNext = async () => {
     if (currentQuestion < exam.questions.length - 1) {
+      const nextQuestionId = exam.questions[currentQuestion + 1]?.id
       setCurrentQuestion(currentQuestion + 1)
-      await saveProgress()
+      await saveProgress(nextQuestionId)
     }
   }
 
@@ -383,7 +418,10 @@ export default function ExamPage() {
                 {exam.questions.map((q: any, index: number) => (
                   <button
                     key={q.id}
-                    onClick={() => setCurrentQuestion(index)}
+                    onClick={async () => {
+                      setCurrentQuestion(index)
+                      await saveProgress(q.id)
+                    }}
                     className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
                       index === currentQuestion
                         ? "bg-blue-600 text-white"

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { signJwtToken } from "@/lib/auth/jwt";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 import { z } from "zod";
 import type { Role } from "@prisma/client";
 import { checkRateLimit } from "@/lib/security/rateLimit";
@@ -44,8 +44,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Too many registration attempts. Try again later." }, { status: 429 });
     }
 
-    const authToken = req.headers.get("authorization")?.split(" ")[1] || null;
-    const decoded = authToken ? verifyToken(authToken) : null;
+    const decoded = verifyTokenFromRequest(req);
     const isSuperAdmin = decoded?.role === "SUPER_ADMIN";
 
     const parsed = registerSchema.safeParse(await req.json());

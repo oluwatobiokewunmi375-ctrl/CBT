@@ -15,17 +15,14 @@ export default function ExamResultPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (!token) {
-      safeNavigate(router, '/login')
-      return
-    }
-
     const fetchResult = async () => {
       try {
-        const res = await fetch(`/api/results/exam/${examId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res = await fetch(`/api/results/exam/${examId}`)
+
+        if (res.status === 401) {
+          safeNavigate(router, '/login')
+          return
+        }
 
         if (!res.ok) {
           const data = await res.json()

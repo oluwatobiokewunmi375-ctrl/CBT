@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    const decoded = token ? verifyToken(token) : null;
+    
+    const decoded = verifyTokenFromRequest(req);
 
     const {
       name,
@@ -77,8 +77,8 @@ export async function GET(req: NextRequest) {
   try {
     const query = new URL(req.url).searchParams;
     const shortCode = query.get("shortCode");
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    const decoded = token ? verifyToken(token) : null;
+    
+    const decoded = verifyTokenFromRequest(req);
 
     if (shortCode) {
       const school = await prisma.school.findUnique({

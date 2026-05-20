@@ -12,57 +12,20 @@
 # Error details
 
 ```
-Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Next' }) resolved to 2 elements:
-    1) <button class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Next</button> aka getByRole('button', { name: 'Next', exact: true })
-    2) <button id="next-logo" aria-haspopup="menu" data-next-mark="true" aria-expanded="false" aria-label="Open Next.js Dev Tools" data-nextjs-dev-tools-button="true" aria-controls="nextjs-dev-tools-menu">…</button> aka getByRole('button', { name: 'Open Next.js Dev Tools' })
+Test timeout of 30000ms exceeded.
+```
 
+```
+Error: locator.click: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for getByRole('button', { name: 'Next' })
+  - waiting for getByRole('button', { name: 'Student Exam' })
 
 ```
 
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
-  - generic [ref=e2]:
-    - generic [ref=e5]:
-      - generic [ref=e6]:
-        - heading "Mathematics Mid-Term Exam" [level=1] [ref=e7]
-        - paragraph [ref=e8]: Question 1 of 4
-      - generic [ref=e9]:
-        - generic [ref=e10]: 60:00
-        - paragraph [ref=e11]: Time remaining
-    - generic [ref=e13]:
-      - generic [ref=e15]:
-        - generic [ref=e16]:
-          - heading "What is 2 + 2?" [level=2] [ref=e17]
-          - generic [ref=e18]:
-            - button "3" [active] [ref=e19]:
-              - generic [ref=e23]: "3"
-            - button "4" [ref=e24]:
-              - generic [ref=e27]: "4"
-            - button "5" [ref=e28]:
-              - generic [ref=e31]: "5"
-            - button "6" [ref=e32]:
-              - generic [ref=e35]: "6"
-        - generic [ref=e36]:
-          - button "Previous" [disabled] [ref=e37]
-          - button "Next" [ref=e38]
-      - generic [ref=e39]:
-        - generic [ref=e40]:
-          - heading "Progress" [level=3] [ref=e41]
-          - generic [ref=e42]: 1 of 4 answered
-        - generic [ref=e45]:
-          - heading "Questions" [level=3] [ref=e46]
-          - generic [ref=e47]:
-            - button "1" [ref=e48]
-            - button "2" [ref=e49]
-            - button "3" [ref=e50]
-            - button "4" [ref=e51]
-  - button "Open Next.js Dev Tools" [ref=e57] [cursor=pointer]:
-    - img [ref=e58]
-  - alert [ref=e61]
+- generic [ref=e2]: missing required error components, refreshing...
 ```
 
 # Test source
@@ -93,7 +56,8 @@ Call log:
   23  | 
   24  | async function loginExam(page, studentNo) {
   25  |   await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
-  26  |   await page.getByRole('button', { name: 'Student Exam' }).click()
+> 26  |   await page.getByRole('button', { name: 'Student Exam' }).click()
+      |                                                            ^ Error: locator.click: Test timeout of 30000ms exceeded.
   27  |   await page.getByPlaceholder('e.g., 0001').fill(studentNo)
   28  |   await Promise.all([
   29  |     page.waitForURL(/\/exam-list/, { timeout: 20000 }),
@@ -150,8 +114,7 @@ Call log:
   80  |       await page.getByRole('button').first().click()
   81  |     }
   82  | 
-> 83  |     await page.getByRole('button', { name: 'Next' }).click()
-      |                                                      ^ Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Next' }) resolved to 2 elements:
+  83  |     await page.getByRole('button', { name: 'Next' }).click()
   84  |     await page.getByRole('button', { name: 'Next' }).click()
   85  |     await page.getByRole('button', { name: 'Next' }).click()
   86  |     await page.getByRole('button', { name: 'Submit Exam' }).click()

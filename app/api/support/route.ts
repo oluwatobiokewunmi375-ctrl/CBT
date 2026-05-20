@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 403 });
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
     const { subject, message, contactEmail } = await req.json();
     if (!subject || !message) return NextResponse.json({ error: "subject and message required" }, { status: 400 });
@@ -34,11 +31,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 403 });
+    const decoded = verifyTokenFromRequest(req);
+    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 
     // SUPER_ADMIN may view all tickets; SCHOOL_ADMIN only their school
     let where: any = { action: 'SUPPORT_TICKET' };

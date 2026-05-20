@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/middleware";
+import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyToken(token);
+    const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { examId, answers, timeSpent } = await req.json();
+    const { examId, answers, timeSpent, sessionId } = await req.json();
 
     if (!examId || !answers) {
       return NextResponse.json(
@@ -51,6 +46,85 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Exam not found" }, { status: 404 });
     }
 
+    if (sessionId) {
+      const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+      });
+
+      if (!session) {
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      }
+
+      if (session.studentId !== student.id) {
+        return NextResponse.json(
+          { error: "Unauthorized - session does not belong to you" },
+          { status: 403 }
+        );
+      }
+
+      if (session.examId !== examId) {
+        return NextResponse.json(
+          { error: "Session exam mismatch" },
+          { status: 400 }
+        );
+      }
+
+      let expiresAt = session.expiresAt;
+
+      if (!expiresAt && session.startedAt) {
+        expiresAt = new Date(
+          session.startedAt.getTime() + exam.duration * 1000
+        );
+      }
+
+      if (expiresAt && expiresAt <= new Date()) {
+        await prisma.session.update({
+          where: { id: sessionId },
+          data: { status: "EXPIRED", expiresAt },
+        });
+
+        return NextResponse.json(
+          { error: "Session has expired" },
+          { status: 400 }
+        );
+      }
+
+      if (session.status !== "ACTIVE") {
+        return NextResponse.json(
+          { error: "Session is not active" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const existingSubmission = await prisma.examSubmission.findFirst({
+      where: {
+        studentId: student.id,
+        examId,
+      },
+    });
+
+    if (existingSubmission) {
+      return NextResponse.json(
+        { error: "Exam has already been submitted" },
+        { status: 409 }
+      );
+    }
+
+    const existingResult = await prisma.result.findFirst({
+      where: {
+        studentId: student.id,
+        examId,
+      },
+    });
+
+    if (existingResult) {
+      return NextResponse.json(
+        { error: "Result already exists for this exam" },
+        { status: 409 }
+      );
+    }
+
     // Calculate score
     let totalScore = 0;
     const answerDetails = [];
@@ -80,68 +154,67 @@ export async function POST(req: NextRequest) {
 
 
 
-const submission = await prisma.examSubmission.create({
-  data: {
-    answers: JSON.stringify(answerDetails),
-    score: totalScore,
-    totalMarks: exam.totalMarks,
-    percentage: (totalScore / exam.totalMarks) * 100,
-    grade:
-      totalScore >= 70
-        ? "A"
-        : totalScore >= 60
-        ? "B"
-        : totalScore >= 50
-        ? "C"
-        : "F",
+const percentage = exam.totalMarks > 0 ? (totalScore / exam.totalMarks) * 100 : 0;
+const grade = calculateGrade(percentage);
+const submittedTimeSpent = Number(timeSpent || 0);
 
-    timeSpent: Number(timeSpent || 0),
-    status: "SUBMITTED",
-
-    student: {
-      connect: {
-        id: String(student.id),
+const transactionItems: any[] = [
+  prisma.examSubmission.create({
+    data: {
+      answers: JSON.stringify(answerDetails),
+      score: totalScore,
+      totalMarks: exam.totalMarks,
+      percentage,
+      grade,
+      timeSpent: submittedTimeSpent,
+      status: "SUBMITTED",
+      student: {
+        connect: {
+          id: String(student.id),
+        },
+      },
+      exam: {
+        connect: {
+          id: String(examId),
+        },
       },
     },
-
-    exam: {
-      connect: {
-        id: String(examId),
-      },
+  }),
+  prisma.result.create({
+    data: {
+      studentId: student.id,
+      examId: examId,
+      schoolId: student.schoolId,
+      score: totalScore,
+      totalMarks: exam.totalMarks,
+      percentage,
+      grade,
+      status: "COMPLETED",
+      answers: JSON.stringify(answerDetails),
+      timeSpent: submittedTimeSpent,
     },
-  },
-});
+  }),
+];
 
-
-
-
-
-
-    // Create result record
-    const resultPercentage = (totalScore / exam.totalMarks) * 100;
-    const resultGrade =
-      totalScore >= exam.totalMarks * 0.7
-        ? "A"
-        : totalScore >= exam.totalMarks * 0.6
-        ? "B"
-        : totalScore >= exam.totalMarks * 0.5
-        ? "C"
-        : "F";
-
-    const result = await prisma.result.create({
+if (sessionId) {
+  transactionItems.push(
+    prisma.session.update({
+      where: { id: sessionId },
       data: {
-        studentId: student.id,
-        examId: examId,
-        schoolId: student.schoolId,
-        score: totalScore,
-        totalMarks: exam.totalMarks,
-        percentage: resultPercentage,
-        grade: resultGrade,
         status: "COMPLETED",
-        answers: JSON.stringify(answerDetails),
-        timeSpent: Number(timeSpent || 0),
+        completedAt: new Date(),
+        timeTakenSeconds: Math.round(submittedTimeSpent * 60),
       },
-    });
+    })
+  );
+}
+
+const [submission] = await prisma.$transaction(transactionItems as any[]);
+
+
+
+
+
 
     return NextResponse.json(
       {
@@ -150,7 +223,7 @@ const submission = await prisma.examSubmission.create({
           id: submission.id,
           score: submission.score,
           totalMarks: submission.totalMarks,
-          percentage: (totalScore / exam.totalMarks) * 100,
+          percentage: submission.percentage,
         },
       },
       { status: 201 }

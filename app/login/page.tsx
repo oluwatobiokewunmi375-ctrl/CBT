@@ -66,9 +66,6 @@ export default function LoginPage() {
         return
       }
 
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-
       toast.success('Login successful!')
 
       if (loginMode === 'exam') {
@@ -78,9 +75,8 @@ export default function LoginPage() {
         if (dest) {
           safeNavigate(router, dest)
         } else {
+          await fetch('/api/auth/logout', { method: 'POST' })
           toast.error('Dashboard login is only available for admins and teachers.')
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
         }
       }
     } catch (error) {
