@@ -6,35 +6,28 @@
 
 # Test info
 
-- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> forgot password and reset password flow
-- Location: tests-e2e\enterprise-flow.spec.ts:91:3
+- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> school admin login and admin dashboard
+- Location: tests-e2e\enterprise-flow.spec.ts:50:3
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
+Error: expect(locator).toContainText(expected) failed
 
-Locator: locator('a[href*="/reset-password?token="]').first()
-Expected: visible
-Timeout: 20000ms
+Locator: locator('h1')
+Expected pattern: /Dashboard/
+Timeout: 5000ms
 Error: element(s) not found
 
 Call log:
-  - Expect "toBeVisible" with timeout 20000ms
-  - waiting for locator('a[href*="/reset-password?token="]').first()
-    - waiting for" http://127.0.0.1:3000/forgot-password" navigation to finish...
+  - Expect "toContainText" with timeout 5000ms
+  - waiting for locator('h1')
+    - waiting for" http://127.0.0.1:3000/admin/dashboard" navigation to finish...
 
 ```
 
 ```yaml
-- main:
-  - heading "Reset Password" [level=1]
-  - paragraph: Enter your email address and we will generate a secure password reset link.
-  - text: Email address
-  - textbox "Enter your email": student1@test.com
-  - button "Generating reset link…" [disabled]
-  - link "Return to Sign In":
-    - /url: /login
+- main: Loading dashboard...
 - alert
 ```
 
@@ -93,7 +86,8 @@ Call log:
   50  |   test('school admin login and admin dashboard', async ({ page }) => {
   51  |     await loginDashboard(page, 'admin@test.com', 'admin123')
   52  |     await expect(page).toHaveURL(/\/admin\/dashboard/)
-  53  |     await expect(page.locator('h1')).toContainText(/Dashboard/)
+> 53  |     await expect(page.locator('h1')).toContainText(/Dashboard/)
+      |                                      ^ Error: expect(locator).toContainText(expected) failed
   54  |   })
   55  | 
   56  |   test('teacher login and admin dashboard', async ({ page }) => {
@@ -137,8 +131,7 @@ Call log:
   94  |     await page.getByRole('button', { name: 'Send Reset Link' }).click()
   95  | 
   96  |     const resetLink = await page.locator('a[href*="/reset-password?token="]').first()
-> 97  |     await expect(resetLink).toBeVisible({ timeout: 20000 })
-      |                             ^ Error: expect(locator).toBeVisible() failed
+  97  |     await expect(resetLink).toBeVisible({ timeout: 20000 })
   98  |     const href = await resetLink.getAttribute('href')
   99  |     expect(href).toContain('/reset-password?token=')
   100 | 

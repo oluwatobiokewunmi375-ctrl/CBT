@@ -6,36 +6,20 @@
 
 # Test info
 
-- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> forgot password and reset password flow
-- Location: tests-e2e\enterprise-flow.spec.ts:91:3
+- Name: enterprise-flow.spec.ts >> CBT enterprise flow >> public routes redirect to login when unauthenticated
+- Location: tests-e2e\enterprise-flow.spec.ts:35:3
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator: locator('a[href*="/reset-password?token="]').first()
-Expected: visible
-Timeout: 20000ms
-Error: element(s) not found
-
-Call log:
-  - Expect "toBeVisible" with timeout 20000ms
-  - waiting for locator('a[href*="/reset-password?token="]').first()
-    - waiting for" http://127.0.0.1:3000/forgot-password" navigation to finish...
-
+Test timeout of 30000ms exceeded.
 ```
 
-```yaml
-- main:
-  - heading "Reset Password" [level=1]
-  - paragraph: Enter your email address and we will generate a secure password reset link.
-  - text: Email address
-  - textbox "Enter your email": student1@test.com
-  - button "Generating reset link…" [disabled]
-  - link "Return to Sign In":
-    - /url: /login
-- alert
+```
+Error: page.goto: Test timeout of 30000ms exceeded.
+Call log:
+  - navigating to "http://127.0.0.1:3000/admin/dashboard", waiting until "load"
+
 ```
 
 # Test source
@@ -76,7 +60,8 @@ Call log:
   33  | 
   34  | test.describe('CBT enterprise flow', () => {
   35  |   test('public routes redirect to login when unauthenticated', async ({ page }) => {
-  36  |     await page.goto(`${baseUrl}/admin/dashboard`, { waitUntil: 'load' })
+> 36  |     await page.goto(`${baseUrl}/admin/dashboard`, { waitUntil: 'load' })
+      |                ^ Error: page.goto: Test timeout of 30000ms exceeded.
   37  |     await page.waitForURL(/\/login/, { timeout: 20000 })
   38  |     await expect(page).toHaveURL(/\/login/)
   39  | 
@@ -137,8 +122,7 @@ Call log:
   94  |     await page.getByRole('button', { name: 'Send Reset Link' }).click()
   95  | 
   96  |     const resetLink = await page.locator('a[href*="/reset-password?token="]').first()
-> 97  |     await expect(resetLink).toBeVisible({ timeout: 20000 })
-      |                             ^ Error: expect(locator).toBeVisible() failed
+  97  |     await expect(resetLink).toBeVisible({ timeout: 20000 })
   98  |     const href = await resetLink.getAttribute('href')
   99  |     expect(href).toContain('/reset-password?token=')
   100 | 
