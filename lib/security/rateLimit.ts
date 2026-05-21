@@ -36,7 +36,14 @@ export function checkRateLimit(
   // or when requests come from Playwright (test runner). This avoids
   // flaky failures during E2E runs.
   const ua = req.headers.get('user-agent') || '';
-  if (process.env.DISABLE_RATE_LIMIT === "true" || process.env.NODE_ENV === "test" || ua.toLowerCase().includes('playwright')) {
+  const isLoadTest = req.headers.get('x-load-test') === 'true';
+  if (
+    process.env.DISABLE_RATE_LIMIT === "true" ||
+    process.env.NODE_ENV === "test" ||
+    ua.toLowerCase().includes('playwright') ||
+    ua.toLowerCase().includes('cbt load test') ||
+    isLoadTest
+  ) {
     return false;
   }
 

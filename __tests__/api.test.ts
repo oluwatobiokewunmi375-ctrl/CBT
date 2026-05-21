@@ -371,7 +371,7 @@ describe("Admin API", () => {
             {
               text: "Test question?",
               marks: 10,
-              type: "MCQ",
+              type: "MULTIPLE_CHOICE",
               options: [
                 { text: "Option 1", isCorrect: true },
                 { text: "Option 2", isCorrect: false },

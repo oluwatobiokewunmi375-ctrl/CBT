@@ -2,14 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
+const metricsKey = Symbol.for("cbt.saveProgressMetrics");
+const saveProgressMetrics = globalThis[metricsKey] || (globalThis[metricsKey] = {
+  ownershipConflict: 0,
+  staleVersionConflict: 0,
+  successfulSave: 0,
+  idempotentSave: 0,
+  saveAttemptCount: 0,
+  totalLatencyMs: 0,
+});
+
+function answersEqual(a, b) {
+  return JSON.stringify(a || {}) === JSON.stringify(b || {});
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const requestStart = Date.now();
+    const loadTest = req.headers.get("x-load-test") === "true";
     const decoded = verifyTokenFromRequest(req);
     if (!decoded) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { sessionId, answers, currentQuestionId, clientUpdatedAt, sessionVersion } = await req.json();
+    const { sessionId, answers, currentQuestionId, clientUpdatedAt, sessionVersion, ownerTabId } = await req.json();
 
     if (!sessionId || !answers || sessionVersion == null) {
       return NextResponse.json(
@@ -50,15 +66,59 @@ export async function POST(req: NextRequest) {
     }
 
     const clientUpdatedAtNum = clientUpdatedAt ? Number(clientUpdatedAt) : null;
+    saveProgressMetrics.saveAttemptCount += 1;
+
     if (clientUpdatedAtNum && session.lastSavedAt && clientUpdatedAtNum <= session.lastSavedAt.getTime()) {
-      return NextResponse.json({ error: "Stale save ignored" }, { status: 409 });
+      saveProgressMetrics.idempotentSave += 1;
+      const responseBody: any = { error: "Stale save ignored" };
+      if (loadTest) {
+        responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+      }
+      return NextResponse.json(responseBody, { status: 409 });
     }
 
     if (sessionVersion < session.version) {
-      return NextResponse.json(
-        { error: "Stale session version", currentVersion: session.version },
-        { status: 409 }
-      );
+      const currentAnswers = session.answersJson?.answers || {};
+      const currentQuestion = session.answersJson?.currentQuestionId;
+      if (answersEqual(answers, currentAnswers) && currentQuestionId === currentQuestion) {
+        saveProgressMetrics.idempotentSave += 1;
+        const responseBody: any = {
+          success: true,
+          message: "Progress already saved",
+          session,
+        };
+        if (loadTest) {
+          responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+        }
+        return NextResponse.json(responseBody, { status: 200 });
+      }
+      saveProgressMetrics.staleVersionConflict += 1;
+      const responseBody: any = { error: "Stale session version", currentVersion: session.version };
+      if (loadTest) {
+        responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+      }
+      return NextResponse.json(responseBody, { status: 409 });
+    }
+
+    // Multi-tab ownership enforcement (optional from client)
+    const HEARTBEAT_TIMEOUT_MS = 30 * 1000; // 30 seconds
+    const now = new Date();
+    if (ownerTabId) {
+      if (session.ownerTabId && session.ownerTabId !== ownerTabId) {
+        const last = session.ownerHeartbeatAt ? session.ownerHeartbeatAt.getTime() : 0;
+        if (now.getTime() - last < HEARTBEAT_TIMEOUT_MS) {
+          saveProgressMetrics.ownershipConflict += 1;
+          const responseBody: any = {
+            error: "Session owned by another tab",
+            ownerTabId: session.ownerTabId,
+          };
+          if (loadTest) {
+            responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+          }
+          return NextResponse.json(responseBody, { status: 409 });
+        }
+        // else: owner heartbeat stale -> allow takeover
+      }
     }
 
     let expiresAt = session.expiresAt;
@@ -77,7 +137,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (expiresAt && expiresAt <= new Date()) {
+    // small grace window to tolerate near-boundary retries from clients
+    const GRACE_MS = 10 * 1000; // 10 seconds
+    if (expiresAt && expiresAt.getTime() + GRACE_MS <= new Date().getTime()) {
       await prisma.session.update({
         where: { id: sessionId },
         data: { status: "EXPIRED", expiresAt },
@@ -97,28 +159,37 @@ export async function POST(req: NextRequest) {
     }
 
     // Update session with current progress and increment version atomically
+    const updateData: any = {
+      answersJson: {
+        answers,
+        currentQuestionId: currentQuestionId || undefined,
+      },
+      lastSavedAt: new Date(),
+      expiresAt: expiresAt || session.expiresAt,
+      version: { increment: 1 },
+    };
+
+    if (ownerTabId) {
+      updateData.ownerTabId = ownerTabId;
+      updateData.ownerHeartbeatAt = now;
+    }
+
     const updateResult = await prisma.session.updateMany({
       where: {
         id: sessionId,
         version: sessionVersion,
         status: "ACTIVE",
       },
-      data: {
-        answersJson: {
-          answers,
-          currentQuestionId: currentQuestionId || undefined,
-        },
-        lastSavedAt: new Date(),
-        expiresAt: expiresAt || session.expiresAt,
-        version: { increment: 1 },
-      },
+      data: updateData,
     });
 
     if (updateResult.count !== 1) {
-      return NextResponse.json(
-        { error: "Session version mismatch or session not active", currentVersion: session.version },
-        { status: 409 }
-      );
+      saveProgressMetrics.staleVersionConflict += 1;
+      const responseBody: any = { error: "Session version mismatch or session not active", currentVersion: session.version };
+      if (loadTest) {
+        responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+      }
+      return NextResponse.json(responseBody, { status: 409 });
     }
 
     const updatedSession = await prisma.session.findUnique({
@@ -129,14 +200,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Session not found after save" }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { 
-        success: true,
-        message: "Progress saved",
-        session: updatedSession
-      },
-      { status: 200 }
-    );
+    saveProgressMetrics.successfulSave += 1;
+    saveProgressMetrics.totalLatencyMs += Date.now() - requestStart;
+
+    const responseBody: any = {
+      success: true,
+      message: "Progress saved",
+      session: updatedSession,
+    };
+    if (loadTest) {
+      responseBody.debug = { saveProgressMetrics: saveProgressMetrics };
+    }
+    return NextResponse.json(responseBody, { status: 200 });
   } catch (error) {
     console.error("Save exam progress error:", error);
     return NextResponse.json(

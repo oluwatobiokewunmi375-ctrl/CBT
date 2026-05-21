@@ -7,6 +7,8 @@ import toast from "react-hot-toast"
 import OfflineExamRunner from '@/components/exam/OfflineExamRunner'
 import { useOfflineStatus } from '@/lib/hooks/useOfflineStatus'
 
+const OWNER_TAB_STORAGE_KEY = 'cbt_exam_owner_tab_id'
+
 export default function ExamPage() {
   const router = useRouter()
   const params = useParams()
@@ -19,6 +21,7 @@ export default function ExamPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
   const [sessionVersion, setSessionVersion] = useState<number>(1)
+  const [ownerTabId, setOwnerTabId] = useState<string>("")
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -77,6 +80,17 @@ export default function ExamPage() {
     }
   }, [examId, router])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let storedTabId = sessionStorage.getItem(OWNER_TAB_STORAGE_KEY)
+    if (!storedTabId) {
+      storedTabId = crypto.randomUUID()
+      sessionStorage.setItem(OWNER_TAB_STORAGE_KEY, storedTabId)
+    }
+    setOwnerTabId(storedTabId)
+  }, [examId])
+
   const startSession = useCallback(async () => {
     if (!examId) return
     try {
@@ -87,6 +101,7 @@ export default function ExamPage() {
           examId,
           ipAddress: window.location.hostname,
           deviceInfo: navigator.userAgent,
+          ownerTabId: ownerTabId || undefined,
         }),
       })
 
@@ -107,7 +122,7 @@ export default function ExamPage() {
       setError(message)
       toast.error(message)
     }
-  }, [exam, examId, router, syncSessionState])
+  }, [exam, examId, ownerTabId, router, syncSessionState])
 
   const saveProgress = useCallback(
     async (currentQuestionId?: string, answersPayload?: Record<string, string>) => {
@@ -122,6 +137,7 @@ export default function ExamPage() {
             currentQuestionId,
             clientUpdatedAt: Date.now(),
             sessionVersion,
+            ownerTabId: ownerTabId || undefined,
           }),
         })
 
@@ -146,7 +162,7 @@ export default function ExamPage() {
         console.warn("Progress save failed:", err)
       }
     },
-    [sessionId, answers, router]
+    [sessionId, answers, ownerTabId, router, sessionVersion]
   )
 
   useEffect(() => {
@@ -181,6 +197,7 @@ export default function ExamPage() {
           answers: formattedAnswers,
           timeSpent: (exam.duration * 60 - (timeLeft || 0)) / 60,
           sessionId,
+          ownerTabId: ownerTabId || undefined,
         }),
       })
 

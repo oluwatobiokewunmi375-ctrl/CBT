@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { examId, ipAddress, deviceInfo } = await req.json();
+    const { examId, ipAddress, deviceInfo, ownerTabId } = await req.json();
 
     if (!examId) {
       return NextResponse.json(
@@ -71,10 +71,12 @@ export async function POST(req: NextRequest) {
             )
           );
 
-      if (computedExpiresAt <= now) {
+      // Apply small server-side grace window to account for near-boundary race conditions
+      const GRACE_MS = 10 * 1000; // 10 seconds
+      if (computedExpiresAt.getTime() + GRACE_MS <= now.getTime()) {
         await prisma.session.update({
           where: { id: existingSession.id },
-          data: { status: "EXPIRED", expiresAt: computedExpiresAt },
+          data: { status: "EXPIRED", expiresAt: computedExpiresAt, version: { increment: 1 } },
         });
 
         return NextResponse.json(
@@ -83,17 +85,41 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (!existingSession.expiresAt) {
-        await prisma.session.update({
-          where: { id: existingSession.id },
-          data: { expiresAt: computedExpiresAt },
-        });
+      const updateData: any = {}
+      const HEARTBEAT_TIMEOUT_MS = 30 * 1000
+      const lastOwnerHeartbeat = existingSession.ownerHeartbeatAt
+        ? existingSession.ownerHeartbeatAt.getTime()
+        : 0
+      const nowMs = now.getTime()
+
+      if (ownerTabId) {
+        if (
+          !existingSession.ownerTabId ||
+          existingSession.ownerTabId === ownerTabId ||
+          nowMs - lastOwnerHeartbeat >= HEARTBEAT_TIMEOUT_MS
+        ) {
+          updateData.ownerTabId = ownerTabId
+          updateData.ownerHeartbeatAt = now
+        }
       }
+
+      if (!existingSession.expiresAt) {
+        updateData.expiresAt = computedExpiresAt
+        updateData.version = { increment: 1 }
+      }
+
+      const sessionToReturn =
+        Object.keys(updateData).length > 0
+          ? await prisma.session.update({
+              where: { id: existingSession.id },
+              data: updateData,
+            })
+          : existingSession
 
       return NextResponse.json(
         { 
           success: true, 
-          session: { ...existingSession, expiresAt: computedExpiresAt },
+          session: { ...sessionToReturn, expiresAt: computedExpiresAt },
           message: "Resuming existing session"
         },
         { status: 200 }
@@ -117,6 +143,8 @@ export async function POST(req: NextRequest) {
         deviceInfo,
         startedAt: now,
         expiresAt,
+        ownerTabId: ownerTabId || undefined,
+        ownerHeartbeatAt: ownerTabId ? now : undefined,
       },
     });
 
@@ -137,8 +165,9 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Start exam session error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: message },
       { status: 500 }
     );
   }

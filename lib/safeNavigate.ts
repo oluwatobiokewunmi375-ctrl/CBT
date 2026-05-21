@@ -1,12 +1,29 @@
 export function safeNavigate(router: any, path: string) {
   if (typeof window === 'undefined') return
-  try {
-    // attempt immediate push
-    router.push(path)
-  } catch (err) {
-    // defer as a fallback to avoid "Router action dispatched before initialization"
-    setTimeout(() => {
-      try { router.push(path) } catch (e) { window.location.href = path }
-    }, 0)
+
+  const pushPath = () => {
+    try {
+      const result = router.push(path)
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => {
+          window.location.href = path
+        })
+      }
+    } catch (err) {
+      setTimeout(() => {
+        try {
+          const retry = router.push(path)
+          if (retry && typeof retry.catch === 'function') {
+            retry.catch(() => {
+              window.location.href = path
+            })
+          }
+        } catch (e) {
+          window.location.href = path
+        }
+      }, 0)
+    }
   }
+
+  pushPath()
 }

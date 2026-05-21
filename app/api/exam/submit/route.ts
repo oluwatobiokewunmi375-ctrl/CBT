@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
 export async function POST(req: NextRequest) {
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { examId, answers, timeSpent, sessionId } = await req.json();
+    const { examId, answers, timeSpent, sessionId, ownerTabId } = await req.json();
 
     if (!examId || !answers) {
       return NextResponse.json(
@@ -73,11 +74,16 @@ export async function POST(req: NextRequest) {
 
       if (!expiresAt && session.startedAt) {
         expiresAt = new Date(
-          session.startedAt.getTime() + exam.duration * 1000
+          Math.min(
+            session.startedAt.getTime() + exam.duration * 1000,
+            exam.endAt ? exam.endAt.getTime() : Infinity
+          )
         );
       }
 
-      if (expiresAt && expiresAt <= new Date()) {
+      // small grace window to tolerate near-boundary retries from clients
+      const GRACE_MS = 10 * 1000; // 10 seconds
+      if (expiresAt && expiresAt.getTime() + GRACE_MS <= new Date().getTime()) {
         await prisma.session.update({
           where: { id: sessionId },
           data: { status: "EXPIRED", expiresAt },
@@ -94,6 +100,19 @@ export async function POST(req: NextRequest) {
           { error: "Session is not active" },
           { status: 400 }
         );
+      }
+
+      // Multi-tab ownership enforcement (optional)
+      if (ownerTabId && session.ownerTabId && session.ownerTabId !== ownerTabId) {
+        const HEARTBEAT_TIMEOUT_MS = 30 * 1000;
+        const last = session.ownerHeartbeatAt ? session.ownerHeartbeatAt.getTime() : 0;
+        if (new Date().getTime() - last < HEARTBEAT_TIMEOUT_MS) {
+          return NextResponse.json(
+            { error: "Session owned by another tab", ownerTabId: session.ownerTabId },
+            { status: 409 }
+          );
+        }
+        // otherwise allow takeover and proceed
       }
     }
 
@@ -204,6 +223,7 @@ if (sessionId) {
         status: "COMPLETED",
         completedAt: new Date(),
         timeTakenSeconds: Math.round(submittedTimeSpent * 60),
+        version: { increment: 1 },
       },
     })
   );
@@ -230,6 +250,17 @@ const [submission] = await prisma.$transaction(transactionItems as any[]);
     );
   } catch (error) {
     console.error("Submit exam error:", error);
+    // Handle unique constraint violations (concurrent duplicate submits)
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Exam already submitted (duplicate prevented)" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
