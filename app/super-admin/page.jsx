@@ -14,6 +14,30 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("schools")
 
+  // Ensure only SUPER_ADMIN users can access this client page
+  useEffect(() => {
+    const checkRole = async () => {
+      try {
+        const res = await fetch('/api/auth/profile')
+        if (!res.ok) {
+          // Not authenticated, middleware should redirect but safeguard here
+          window.location.href = '/login'
+          return
+        }
+        const data = await res.json()
+        const role = data?.profile?.role || ''
+        if ((role || '').toString().toUpperCase() !== 'SUPER_ADMIN') {
+          // Not super admin - redirect away
+          window.location.href = '/dashboard'
+        }
+      } catch (err) {
+        console.error('Role check failed', err)
+      }
+    }
+
+    checkRole()
+  }, [])
+
   useEffect(() => {
     fetchSchools()
     fetchAdmins()
