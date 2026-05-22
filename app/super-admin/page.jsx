@@ -306,6 +306,28 @@ export default function SuperAdmin() {
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                   <button onClick={() => window.alert(JSON.stringify(school, null, 2))} style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', background: '#fff' }}>View</button>
                   <button onClick={() => { setSelectedSchoolId(school.id); setActiveTab('admins') }} style={{ padding: '6px 10px', borderRadius: 4, border: 'none', background: '#007bff', color: '#fff' }}>Manage Admins</button>
+                  <button onClick={async () => {
+                    const confirmDisable = confirm('Disable this school (soft-delete)?')
+                    if (!confirmDisable) return
+                    try {
+                      const res = await fetch(`/api/school/${school.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable' }) })
+                      const data = await res.json()
+                      if (!res.ok) throw new Error(data.error || 'Failed')
+                      alert('School disabled')
+                      fetchSchools()
+                    } catch (err) { alert('Disable failed: ' + err.message) }
+                  }} style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #e74c3c', background: '#fff', color: '#e74c3c' }}>Disable</button>
+                  <button onClick={async () => {
+                    const confirmDelete = confirm('Permanently delete this school? This cannot be undone.')
+                    if (!confirmDelete) return
+                    try {
+                      const res = await fetch(`/api/school/${school.id}`, { method: 'DELETE' })
+                      const data = await res.json()
+                      if (!res.ok) throw new Error(data.error || 'Failed')
+                      alert('School deleted')
+                      fetchSchools()
+                    } catch (err) { alert('Delete failed: ' + err.message) }
+                  }} style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #a93226', background: '#a93226', color: '#fff' }}>Delete</button>
                 </div>
               </div>
             ))}
