@@ -1,6 +1,16 @@
 import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { verifyJwtToken } from '@/lib/auth/jwt'
 
 export default async function SuperAdminDashboard() {
+  // Server-side auth: ensure only SUPER_ADMIN can access
+  const token = cookies().get('token')?.value || null
+  const decoded = token ? verifyJwtToken(token) : null
+  if (!decoded || (decoded.role || '').toString().toUpperCase() !== 'SUPER_ADMIN') {
+    return redirect('/login')
+  }
+
   const [schoolCount, adminCount, examCount, studentCount] = await Promise.all([
     prisma.school.count(),
     prisma.user.count({ where: { role: 'SUPER_ADMIN' } }),
