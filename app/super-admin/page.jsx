@@ -14,6 +14,10 @@ export default function SuperAdmin() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("schools")
 
+  const [query, setQuery] = useState("")
+  const [pageIndex, setPageIndex] = useState(0)
+  const pageSize = 6
+
   // Ensure only SUPER_ADMIN users can access this client page
   useEffect(() => {
     const checkRole = async () => {
@@ -69,6 +73,12 @@ export default function SuperAdmin() {
       console.error("Failed to fetch admins:", error)
     }
   }
+
+  const filteredSchools = schools.filter((s) => {
+    const q = (query || '').toString().toLowerCase()
+    if (!q) return true
+    return (s.name || '').toString().toLowerCase().includes(q) || (s.shortCode || '').toString().toLowerCase().includes(q)
+  })
 
   const createSchool = async () => {
     if (!schoolName || !schoolCode) {
@@ -263,8 +273,20 @@ export default function SuperAdmin() {
           </div>
 
           <h3 style={{ fontSize: 18, marginBottom: 10 }}>Existing Schools</h3>
+          <div style={{ marginBottom: 12 }}>
+            <input
+              placeholder="Search schools by name or code"
+              value={query}
+              onChange={e => { setQuery(e.target.value); setPageIndex(0) }}
+              style={{ padding: 10, marginRight: 10, border: "1px solid #ddd", borderRadius: 4, width: 320 }}
+            />
+          </div>
           <div style={{ display: "grid", gap: 10 }}>
-            {schools.map((school) => (
+            {filteredSchools.length === 0 && (
+              <div style={{ padding: 10, color: '#888' }}>No schools found</div>
+            )}
+
+            {filteredSchools.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize).map((school) => (
               <div key={school.id} style={{
                 padding: 15,
                 border: "1px solid #ddd",
@@ -278,8 +300,20 @@ export default function SuperAdmin() {
                   Teachers: {school._count?.teachers || 0} |
                   Exams: {school._count?.exams || 0}
                 </p>
+                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                  <button onClick={() => window.alert(JSON.stringify(school, null, 2))} style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', background: '#fff' }}>View</button>
+                  <button onClick={() => { setSelectedSchoolId(school.id); setActiveTab('admins') }} style={{ padding: '6px 10px', borderRadius: 4, border: 'none', background: '#007bff', color: '#fff' }}>Manage Admins</button>
+                </div>
               </div>
             ))}
+
+            {filteredSchools.length > pageSize && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button disabled={pageIndex === 0} onClick={() => setPageIndex(p => Math.max(0, p - 1))} style={{ padding: '6px 10px' }}>Prev</button>
+                <span style={{ color: '#666' }}>Page {pageIndex + 1} of {Math.ceil(filteredSchools.length / pageSize)}</span>
+                <button disabled={(pageIndex + 1) * pageSize >= filteredSchools.length} onClick={() => setPageIndex(p => p + 1)} style={{ padding: '6px 10px' }}>Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}
