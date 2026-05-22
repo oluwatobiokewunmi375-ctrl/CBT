@@ -17,6 +17,9 @@ export default function SuperAdmin() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(0)
   const pageSize = 6
+  const [adminQuery, setAdminQuery] = useState("")
+  const [adminPageIndex, setAdminPageIndex] = useState(0)
+  const adminPageSize = 8
 
   // Ensure only SUPER_ADMIN users can access this client page
   useEffect(() => {
@@ -400,8 +403,20 @@ export default function SuperAdmin() {
           </div>
 
           <h3 style={{ fontSize: 18, marginBottom: 10 }}>Existing Admins</h3>
+          <div style={{ marginBottom: 12 }}>
+            <input
+              placeholder="Search admins by name or email"
+              value={adminQuery}
+              onChange={e => { setAdminQuery(e.target.value); setAdminPageIndex(0) }}
+              style={{ padding: 10, marginRight: 10, border: "1px solid #ddd", borderRadius: 4, width: 320 }}
+            />
+          </div>
           <div style={{ display: "grid", gap: 10 }}>
-            {admins.map((admin) => (
+            {admins.filter(a => {
+              const q = (adminQuery || '').toString().toLowerCase()
+              if (!q) return true
+              return (a.fullName || '').toString().toLowerCase().includes(q) || (a.email || '').toString().toLowerCase().includes(q)
+            }).slice(adminPageIndex * adminPageSize, (adminPageIndex + 1) * adminPageSize).map((admin) => (
               <div key={admin.id} style={{
                 padding: 15,
                 border: "1px solid #ddd",
@@ -412,6 +427,13 @@ export default function SuperAdmin() {
                 <p style={{ margin: 0, color: "#666" }}>{admin.email}</p>
               </div>
             ))}
+            {admins.length > adminPageSize && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button disabled={adminPageIndex === 0} onClick={() => setAdminPageIndex(p => Math.max(0, p - 1))} style={{ padding: '6px 10px' }}>Prev</button>
+                <span style={{ color: '#666' }}>Page {adminPageIndex + 1} of {Math.ceil(admins.length / adminPageSize)}</span>
+                <button disabled={(adminPageIndex + 1) * adminPageSize >= admins.length} onClick={() => setAdminPageIndex(p => p + 1)} style={{ padding: '6px 10px' }}>Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}
