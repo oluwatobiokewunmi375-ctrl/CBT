@@ -103,8 +103,10 @@ export default function ExamList() {
 
                 <div className="mt-6 flex flex-wrap gap-3">
                   <button
+                    data-testid="start-exam-button"
                     onClick={() => safeNavigate(router, `/exam/${exam.id}`)}
                     className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                    aria-label={`Start exam ${exam.title}`}
                   >
                     Start Exam
                   </button>

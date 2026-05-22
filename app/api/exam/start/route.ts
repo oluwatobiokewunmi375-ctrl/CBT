@@ -2,6 +2,32 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyTokenFromRequest } from "@/lib/auth/middleware";
 
+/**
+ * PROTECTED: Session Creation Invariants
+ * =====================================
+ * 
+ * This route creates or resumes exam sessions with the following guaranteed invariants:
+ * 
+ * 1. Session Uniqueness: Only one ACTIVE session per (student, exam) pair
+ * 2. Version Initialization: New sessions start with version=1
+ * 3. Ownership Assignment: ownerTabId assigned to first tab that starts exam
+ * 4. Expiry Enforcement: expiresAt is server-authoritative; 10s grace window applied
+ * 5. Heartbeat Initialization: ownerHeartbeatAt set when owner established
+ * 
+ * DO NOT MODIFY:
+ * - Session version semantics
+ * - ownerTabId assignment logic
+ * - expiresAt calculation
+ * - Grace window duration (10s)
+ * - Unique constraint on (student, exam)
+ * 
+ * These invariants are validated by:
+ * - tests-e2e/exam-resilience.spec.ts (Playwright tests)
+ * - scripts/load-stress.cjs --students=25 (Load test)
+ * 
+ * See RUNTIME_STABILITY_LOCK.md for full invariant documentation.
+ */
+
 export async function POST(req: NextRequest) {
   try {
     const decoded = verifyTokenFromRequest(req);

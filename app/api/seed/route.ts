@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         success: true,
         message: "Database seeded successfully",
         accounts: {
-          superAdmin: "superadmin@test.com / admin123",
+          superAdmin: "adebayosamuel015@gmail.com / Hibilero@2104",
           schoolAdmin: "admin@test.com / admin123",
           teacher: "teacher@test.com / teacher123",
           students: "student1@test.com to student10@test.com / student123",

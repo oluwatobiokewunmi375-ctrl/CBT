@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { Mail, Lock, ArrowRight, Loader, Ticket } from 'lucide-react'
 import { saveSession } from '../../lib/auth/session'
@@ -51,7 +50,7 @@ export default function LoginPage() {
     try {
       const loginData = loginMode === 'dashboard'
         ? { email: formData.email, password: formData.password }
-        : { studentNo: formData.studentNo }
+        : { studentNo: formData.studentNo, password: formData.password }
 
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -62,7 +61,16 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        toast.error(data.error || 'Login failed')
+        const apiError = data?.error
+        const formattedError =
+          typeof apiError === 'string'
+            ? apiError
+            : Array.isArray(apiError)
+            ? apiError.join('; ')
+            : apiError && typeof apiError === 'object'
+            ? Object.values(apiError).flat().join('; ')
+            : 'Login failed'
+        toast.error(formattedError)
         return
       }
 
@@ -120,7 +128,7 @@ export default function LoginPage() {
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
               CBT System Access
             </div>
-            <p className="text-slate-400 max-w-xl mx-auto">
+            <p className="text-slate-400 max-w-xl mx-auto text-sm">
               Use Student ID login for exam access. Use Dashboard login only if you are a school or system administrator.
             </p>
           </div>
@@ -129,6 +137,7 @@ export default function LoginPage() {
           <div className="flex gap-4 mb-6">
             <button
               type="button"
+              data-testid="dashboard-access-button"
               onClick={() => setLoginMode('dashboard')}
               className={`flex-1 py-3 rounded-lg font-semibold transition ${
                 loginMode === 'dashboard'
@@ -140,6 +149,7 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
+              data-testid="student-exam-button"
               onClick={() => setLoginMode('exam')}
               className={`flex-1 py-3 rounded-lg font-semibold transition ${
                 loginMode === 'exam'
@@ -151,18 +161,19 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Form */}
+          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Dashboard Login */}
+            {/* Dashboard Login Fields */}
             {loginMode === 'dashboard' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="email"
                       name="email"
+                      data-testid="email-input"
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="you@example.com"
@@ -173,12 +184,13 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Password</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="password"
                       name="password"
+                      data-testid="password-input"
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="••••••••"
@@ -190,29 +202,50 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* Exam Login */}
+            {/* Exam Login Fields */}
             {loginMode === 'exam' && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Student ID Number</label>
-                <div className="relative">
-                  <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    name="studentNo"
-                    value={formData.studentNo}
-                    onChange={handleChange}
-                    placeholder="e.g., 0001"
-                    required
-                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition text-center text-lg tracking-widest"
-                  />
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Student ID Number</label>
+                  <div className="relative">
+                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      name="studentNo"
+                      data-testid="student-id-input"
+                      value={formData.studentNo}
+                      onChange={handleChange}
+                      placeholder="e.g., STU001"
+                      required
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition text-center text-lg tracking-widest"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">Enter your student ID (e.g., STU001)</p>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Enter your 4-6 digit student ID number from your ID card</p>
-              </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="password"
+                      name="password"
+                      data-testid="password-input"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      required
+                      className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-slate-700/80 transition"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Submit Button */}
             <button
               type="submit"
+              data-testid="login-submit-btn"
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-3 font-semibold flex items-center justify-center gap-2 transition transform hover:scale-105 mt-6"
             >
@@ -230,12 +263,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Links */}
-          <div className="flex justify-center text-sm mt-6">
-            <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300">
-              Forgot password?
-            </Link>
-          </div>
+          {/* Note: Forgot password is handled by school admin */}
+          <p className="text-xs text-slate-500 text-center mt-6">
+            Password reset requests should be submitted to your school administrator.
+          </p>
         </div>
       </div>
     </div>

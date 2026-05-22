@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Check if any super admin already exists
     const existingSuperAdmin = await prisma.user.findFirst({
       where: { role: "SUPER_ADMIN" },
@@ -35,8 +37,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
     });
 
     if (existingUser) {
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     // Create super admin user
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         fullName,
         role: "SUPER_ADMIN",

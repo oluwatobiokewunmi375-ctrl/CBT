@@ -12,22 +12,23 @@ test.beforeEach(async ({ page }) => {
 
 async function loginDashboard(page, email, password) {
   await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
-  await page.getByRole('button', { name: 'Dashboard Access' }).click()
-  await page.getByPlaceholder('you@example.com').fill(email)
-  await page.getByPlaceholder('••••••••').fill(password)
+  await page.getByTestId('dashboard-access-button').click()
+  await page.getByTestId('email-input').fill(email)
+  await page.getByTestId('password-input').fill(password)
   await Promise.all([
     page.waitForURL(/\/super-admin\/dashboard|\/admin\/dashboard|\/dashboard/, { timeout: 20000 }),
-    page.getByRole('button', { name: 'Go to Dashboard' }).click(),
+    page.getByTestId('login-submit-btn').click(),
   ])
 }
 
 async function loginExam(page, studentNo) {
   await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
-  await page.getByRole('button', { name: 'Student Exam' }).click()
-  await page.getByPlaceholder('e.g., 0001').fill(studentNo)
+  await page.getByTestId('student-exam-button').click()
+  await page.getByTestId('student-id-input').fill(studentNo)
+  await page.getByTestId('password-input').fill('stud123')
   await Promise.all([
     page.waitForURL(/\/exam-list/, { timeout: 20000 }),
-    page.getByRole('button', { name: 'Enter Exam' }).click(),
+    page.getByTestId('login-submit-btn').click(),
   ])
 }
 
@@ -88,35 +89,33 @@ test.describe('CBT enterprise flow', () => {
     await expect(page.locator('text=Exam Submitted Successfully')).toBeVisible({ timeout: 30000 })
   })
 
-  test('forgot password and reset password flow', async ({ page }) => {
-    await page.goto(`${baseUrl}/forgot-password`, { waitUntil: 'load' })
-    await page.getByPlaceholder('Enter your email').fill('student1@test.com')
-    await page.getByRole('button', { name: 'Send Reset Link' }).click()
+  test('admin resets student password successfully', async ({ page }) => {
+    // Admin logs in
+    await loginDashboard(page, 'admin@test.com', 'admin123')
+    await expect(page).toHaveURL(/\/admin\/dashboard/)
 
-    const resetLink = await page.locator('a[href*="/reset-password?token="]').first()
-    await expect(resetLink).toBeVisible({ timeout: 20000 })
-    const href = await resetLink.getAttribute('href')
-    expect(href).toContain('/reset-password?token=')
+    // Navigate to students page
+    await page.goto(`${baseUrl}/admin/students`, { waitUntil: 'load' })
+    await expect(page.locator('text=Students Management')).toBeVisible({ timeout: 20000 })
 
-    await Promise.all([
-      page.waitForURL(/\/reset-password\?token=/, { timeout: 20000 }),
-      page.goto(href!, { waitUntil: 'load' }),
-    ])
+    // Find and click reset password button for STU001
+    const studentRow = page.locator('tr', { has: page.locator('text=STU001') })
+    const resetButton = studentRow.locator('button', { hasText: /Reset Password/i })
+    await expect(resetButton).toBeVisible({ timeout: 10000 })
+    await resetButton.click()
 
-    await expect(page.locator('input[placeholder="Enter new password"]').first()).toBeVisible({ timeout: 20000 })
-    await page.getByPlaceholder('Enter new password').fill('newstudent123')
-    await page.getByPlaceholder('Confirm new password').fill('newstudent123')
-    await page.getByRole('button', { name: 'Reset Password' }).click()
+    // Wait for success message
+    await expect(page.locator('text=/Password reset successfully/i')).toBeVisible({ timeout: 10000 })
 
-    await expect(page.locator('text=Your password has been updated successfully.')).toBeVisible({ timeout: 30000 })
+    // Logout admin
+    await page.goto(`${baseUrl}/api/auth/logout`, { waitUntil: 'load' })
 
-    await page.goto(`${baseUrl}/login`, { waitUntil: 'load' })
-    await page.getByRole('button', { name: 'Dashboard Access' }).click()
-    await page.getByPlaceholder('you@example.com').fill('student1@test.com')
-    await page.getByPlaceholder('••••••••').fill('newstudent123')
-    await Promise.all([
-      page.waitForURL(/\/dashboard/, { timeout: 20000 }),
-      page.getByRole('button', { name: 'Go to Dashboard' }).click(),
-    ])
+    // Login as student with new password (stud123)
+    await loginExam(page, 'STU001')
+    await expect(page.locator('text=Available Exams')).toBeVisible({ timeout: 20000 })
+
+    // Verify student can see exams
+    const startButton = page.getByRole('button', { name: /Start Exam/i }).first()
+    await expect(startButton).toBeVisible({ timeout: 30000 })
   })
 })

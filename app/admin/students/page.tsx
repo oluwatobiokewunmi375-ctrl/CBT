@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { safeNavigate } from '../../../lib/safeNavigate'
 import toast from 'react-hot-toast'
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus, Loader2, RotateCcw } from 'lucide-react'
 
 export default function AdminStudentsPage() {
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [resettingId, setResettingId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -82,6 +83,30 @@ export default function AdminStudentsPage() {
       }
     } catch (err) {
       console.error('Failed to load classrooms:', err)
+    }
+  }
+
+  const handleResetPassword = async (studentId: string, studentNo: string) => {
+    setResettingId(studentId)
+    try {
+      const res = await fetch('/api/admin/reset-student-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        toast.success(`Password reset successfully. New password: ${data.temporaryPassword}`)
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to reset password')
+      }
+    } catch (err) {
+      toast.error('Error resetting password')
+      console.error(err)
+    } finally {
+      setResettingId(null)
     }
   }
 
@@ -197,6 +222,7 @@ export default function AdminStudentsPage() {
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Email</th>
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Class</th>
                     <th className="px-6 py-4 text-left text-slate-300 font-semibold">Gender</th>
+                    <th className="px-6 py-4 text-left text-slate-300 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,6 +233,20 @@ export default function AdminStudentsPage() {
                       <td className="px-6 py-4 text-slate-400">{student.user?.email}</td>
                       <td className="px-6 py-4 text-slate-300">{student.classRoom?.name || 'Unassigned'}</td>
                       <td className="px-6 py-4 text-slate-300">{student.gender || '-'}</td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleResetPassword(student.id, student.studentNo)}
+                          disabled={resettingId === student.id}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm rounded-lg transition"
+                        >
+                          {resettingId === student.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-4 h-4" />
+                          )}
+                          Reset Password
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -7,10 +7,10 @@ async function main() {
   console.log('🌱 Seeding provided mock accounts...')
 
   try {
-    const superAdminEmail = 'Adebayosamuel015@gmail.com'
+    const superAdminEmail = 'adebayosamuel015@gmail.com'
     const superAdminPassword = 'Hibilero@2104'
 
-    const existingSuper = await prisma.user.findUnique({ where: { email: superAdminEmail } })
+    const existingSuper = await prisma.user.findFirst({ where: { email: { equals: superAdminEmail, mode: 'insensitive' } }, })
     if (!existingSuper) {
       const hashed = await bcrypt.hash(superAdminPassword, 10)
       const user = await prisma.user.create({

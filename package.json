@@ -32,6 +32,7 @@
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:all": "npm run test && npm run test:e2e",
+    "test:runtime": "jest __tests__/runtime-lock-validation.test.ts __tests__/snapshot-protection.test.ts",
     "dev": "cross-env NEXT_DISABLE_TURBOPACK=1 next dev --webpack",
     "build": "cross-env NEXT_DISABLE_TURBOPACK=1 next build --webpack",
     "start": "next start",
@@ -42,7 +43,11 @@
     "verify": "node scripts/verify-integrity.js",
     "check": "npm run verify && npm run type-check && npm run lint",
     "secure": "git status && npm run verify",
-    "lock": "git add . && git commit -m 'LOCK: Secure checkpoint'"
+    "lock": "git add . && git commit -m 'LOCK: Secure checkpoint'",
+    "validate:runtime": "npm run type-check && npm run lint && npm run build",
+    "validate:resilience": "npx playwright test tests-e2e/exam-resilience.spec.ts --workers=1",
+    "validate:load": "node scripts/load-stress.cjs --students=25",
+    "validate:all": "npm run validate:runtime && npm run test && npm run validate:resilience && npm run validate:load"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

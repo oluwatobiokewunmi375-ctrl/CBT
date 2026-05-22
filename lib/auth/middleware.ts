@@ -36,31 +36,15 @@ const publicPaths = [
   "/",
   "/login",
   "/signup",
-  "/forgot-password",
-  "/reset-password",
   "/verify-email",
   "/api/auth",
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
-  "/api/auth/forgot-password",
-  "/api/auth/reset-password",
   "/api/auth/verify-email",
   "/api/health",
+  "/api/seed",
 ]
-
-const isStaticAsset = (pathname: string) =>
-  pathname.startsWith("/_next") || pathname.startsWith("/static") || pathname === "/favicon.ico"
-
-const isPublicPath = (pathname: string) =>
-  publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
-
-const buildLoginRedirect = (url: URL, pathname: string) => {
-  const loginUrl = new URL(url.toString())
-  loginUrl.pathname = "/login"
-  loginUrl.searchParams.set("from", pathname)
-  return loginUrl
-}
 
 const clearTokenCookie = (response: NextResponse) => {
   response.cookies.set("token", "", {
@@ -71,6 +55,26 @@ const clearTokenCookie = (response: NextResponse) => {
     maxAge: 0,
   })
   return response
+}
+
+const isStaticAsset = (pathname: string) => {
+  return pathname.startsWith("/_next/") || pathname.startsWith("/static/") || pathname === "/favicon.ico"
+}
+
+const isPublicPath = (pathname: string) => {
+  return publicPaths.some((publicPath) => {
+    if (publicPath === "/") {
+      return pathname === "/"
+    }
+    return pathname === publicPath || pathname.startsWith(`${publicPath}/`)
+  })
+}
+
+const buildLoginRedirect = (nextUrl: URL, pathname: string) => {
+  const loginUrl = new URL(nextUrl.toString())
+  loginUrl.pathname = "/login"
+  loginUrl.searchParams.set("returnUrl", pathname)
+  return loginUrl
 }
 
 export function authMiddleware(req: NextRequest) {

@@ -1,3 +1,100 @@
+/**
+ * PROTECTED: Submit Pipeline Critical Section
+ * ============================================
+ * 
+ * This route implements the final submission flow with atomic scoring.
+ * This is a PROTECTED RUNTIME CRITICAL SECTION.
+ * 
+ * GUARANTEED INVARIANTS:
+ * 1. Ownership Enforcement: Only ownerTabId can submit
+ *    - Check session.ownerTabId matches request ownerTabId
+ *    - Non-owner tab returns 403 Forbidden
+ *    - Ownership can be transferred after 30s heartbeat expires
+ * 
+ * 2. Expiry Enforcement: Cannot submit after expiresAt + 10s grace window
+ *    - Server computes expiresAt from startedAt + exam.duration
+ *    - GRACE_MS = 10 seconds allows final retries
+ *    - After grace expires, session marked EXPIRED and submit returns 400
+ *    - This is a HARD BOUNDARY - no exceptions
+ * 
+ * 3. Duplicate Prevention: At most one ExamSubmission per (student, exam)
+ *    - Database unique constraint: @@unique([studentId, examId])
+ *    - Second submit attempt returns 409 with "already submitted"
+ *    - Constraint is enforced at Prisma/DB level, not application logic
+ *    - CONSTRAINT MUST NOT BE REMOVED
+ * 
+ * 4. Atomic Scoring: ExamSubmission and Result created together, never partial
+ *    - Both created in same transaction via prisma.$transaction([])
+ *    - If ExamSubmission creation succeeds but Result fails, ENTIRE transaction rolls back
+ *    - No partial results possible
+ *    - Session.version incremented atomically in same transaction
+ * 
+ * 5. Idempotent Submit: Multiple submit calls return same score (no duplicates)
+ *    - If ExamSubmission already exists, return 409 conflict
+ *    - Duplicate prevent is at constraint level, not application level
+ *    - Second submit attempt gets 409 and must NOT retry forever
+ *    - UI should show existing score on 409 response
+ * 
+ * SCHEMA CONSTRAINTS PROTECTING DUPLICATES:
+ * - ExamSubmission: @@unique([studentId, examId])
+ *   MUST NOT BE REMOVED OR WEAKENED
+ *   This is the PRIMARY protection against duplicate submissions
+ * 
+ * - Result: @@unique([studentId, examId])
+ *   MUST NOT BE REMOVED OR WEAKENED
+ *   This is the PRIMARY protection against duplicate scoring
+ * 
+ * TRANSACTION SEMANTICS:
+ * - All writes happen in ONE transaction: prisma.$transaction([...])
+ * - ExamSubmission creation
+ * - Result creation
+ * - Session status update + version increment
+ * - If ANY operation fails, ENTIRE transaction rolls back
+ * - ATOMICITY MUST BE MAINTAINED
+ * 
+ * DO NOT MODIFY:
+ * - Unique constraints on ExamSubmission or Result
+ *   CONSTRAINT VIOLATIONS ARE FEATURE, NOT BUG
+ * - Ownership check (ownerTabId comparison)
+ *   MUST validate before accepting answers
+ * - Expiry grace window (10s)
+ *   MUST NOT change this value - 10s is carefully chosen
+ * - Transaction semantics (submit and score atomically)
+ *   MUST use prisma.$transaction for atomicity
+ * - Expiry calculation (startedAt + exam.duration)
+ *   MUST be computed on server, not client
+ * - Version increment on submit
+ *   MUST increment atomically in submit transaction
+ * 
+ * CONFLICT HANDLING:
+ * - If duplicate submit detected (409): This is SAFE and EXPECTED
+ *   → Return existing score to client
+ *   → Do not retry - constraint prevented actual duplicate
+ * - If ownership conflict (403): Non-owner tried to submit
+ *   → Return 403 and tell client to refresh
+ *   → Ownership can be reclaimed after 30s heartbeat expires
+ * - If expired (400): Session beyond grace window
+ *   → Return 400 and mark session EXPIRED
+ *   → Do not allow submit after this point
+ * 
+ * SCORING LOGIC:
+ * - Score calculation happens BEFORE transaction
+ * - Answers compared against question.options[].isCorrect
+ * - Marks awarded based on question.marks field
+ * - Grade calculated from percentage
+ * - All scoring logic happens on server, not client
+ * 
+ * Test Coverage:
+ * - __tests__/snapshot-protection.test.ts (duplicate prevention)
+ * - __tests__/concurrency.submit.test.ts (concurrent submit stress)
+ * - tests-e2e/exam-resilience.spec.ts (submit workflow)
+ * - scripts/load-stress.cjs (duplicate row validation)
+ * 
+ * See RUNTIME_STABILITY_LOCK.md for full submit invariants.
+ * See FEATURE_BOUNDARIES.md for UI layer constraints.
+ * See RUNTIME_GUARDRAILS.md for validation gates.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";

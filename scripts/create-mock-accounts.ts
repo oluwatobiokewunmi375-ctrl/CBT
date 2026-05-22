@@ -8,7 +8,7 @@ async function main() {
 
   try {
     // Super Admin
-    const superAdminEmail = 'Adebayosamuel015@gmail.com'
+    const superAdminEmail = 'adebayosamuel015@gmail.com'
     const superAdminPassword = 'Hibilero@2104'
 
     const existingSuper = await prisma.user.findUnique({ where: { email: superAdminEmail } })
