@@ -1,0 +1,88 @@
+# Test files - not needed in production
+__tests__
+tests
+tests-e2e
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+.test.*
+jest.config.*
+playwright.config.ts
+
+# Build and cache files
+.next
+out
+dist
+build
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development files
+.env.local
+.env.development.local
+.env.test.local
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git and documentation files
+.git
+.gitignore
+.github
+.gitattributes
+README.md
+CHANGELOG.md
+*.md
+
+# Package manager lock files (only for size reduction)
+yarn.lock
+pnpm-lock.yaml
+
+# Node modules (let Vercel handle)
+node_modules
+
+# Performance reports and benchmarks
+performance-reports
+*-benchmark.*
+*-output.txt
+phase*.log
+
+# Script files (not needed in production)
+scripts/*.cjs
+scripts/*.js
+
+# Database backup files
+*.backup
+*.sql
+backup_*
+
+# Temporary files
+temp/
+tmp/
+.tmp
+
+# Coverage reports
+coverage
+.coverage
+
+# IDE files
+*.iml
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride

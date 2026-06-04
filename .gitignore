@@ -1,14 +1,19 @@
 node_modules
 .next
-.env
-.env.local
 dist
 build
 coverage
 *.log
 
+# Environment files - NEVER commit
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
 # Ignore phantom/temporary files
-/t 
+/t
 /t Creating backup...
 /t Installing dependencies...
 /t Restoring stable commit*
