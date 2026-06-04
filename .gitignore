@@ -6,3 +6,10 @@ dist
 build
 coverage
 *.log
+
+# Ignore phantom/temporary files
+/t 
+/t Creating backup...
+/t Installing dependencies...
+/t Restoring stable commit*
+/t Running Next.js build*
