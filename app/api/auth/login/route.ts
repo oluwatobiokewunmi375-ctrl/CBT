@@ -50,7 +50,12 @@ export async function POST(req: NextRequest) {
           user: {
             include: {
               student: true,
-              teacher: true,
+              teacher: {
+                include: {
+                  school: true,
+                },
+              },
+              school: true,
             },
           },
           school: true,
@@ -59,7 +64,8 @@ export async function POST(req: NextRequest) {
       });
 
       if (!student || !student.user) {
-        return NextResponse.json({ error: "Invalid student ID" }, { status: 401 });
+        console.warn(`Login attempt: Student not found with studentNo=${studentNo}`);
+        return NextResponse.json({ error: "Student ID not found in system" }, { status: 401 });
       }
 
       // If password not supplied for student login, default to the test password
@@ -67,6 +73,7 @@ export async function POST(req: NextRequest) {
       const suppliedPassword = parsed.data.password || "stud123";
 
       if (process.env.REQUIRE_EMAIL_VERIFICATION === "true" && !student.user.emailVerified) {
+        console.warn(`Login blocked: Student email not verified for studentNo=${studentNo}`);
         return NextResponse.json(
           { error: "Email not verified. Please verify your account before signing in." },
           { status: 403 }
@@ -76,13 +83,14 @@ export async function POST(req: NextRequest) {
       // verify password for student
       const passwordMatch = await compare(suppliedPassword, student.user.password)
       if (!passwordMatch) {
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        console.warn(`Login attempt: Invalid password for student ${studentNo}`);
+        return NextResponse.json({ error: "Invalid password for this student ID" }, { status: 401 });
       }
 
       user = student.user;
     } else {
       user = await prisma.user.findFirst({
-        where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+        where: { email: { equals: normalizedEmail as string, mode: 'insensitive' } },
         include: {
           student: {
             include: {
@@ -101,10 +109,12 @@ export async function POST(req: NextRequest) {
       });
 
       if (!user) {
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        console.warn(`Login attempt: User not found with email=${normalizedEmail}`);
+        return NextResponse.json({ error: "Email address not found in system" }, { status: 401 });
       }
 
       if (process.env.REQUIRE_EMAIL_VERIFICATION === "true" && !user.emailVerified) {
+        console.warn(`Login blocked: Email not verified for user ${normalizedEmail}`);
         return NextResponse.json(
           { error: "Email not verified. Please verify your account before signing in." },
           { status: 403 }
@@ -112,13 +122,14 @@ export async function POST(req: NextRequest) {
       }
 
       if (!password || !(await compare(password, user.password))) {
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        console.warn(`Login attempt: Invalid password for user ${normalizedEmail}`);
+        return NextResponse.json({ error: "Invalid password for this email address" }, { status: 401 });
       }
 
       student = user.student || null;
     }
 
-    const schoolId = student?.school?.id || user.school?.id || user.teacher?.school?.id || null;
+    const schoolId = student?.schoolId || user.school?.id || user.teacher?.school?.id;
 
     const token = signJwtToken({
       id: user.id,

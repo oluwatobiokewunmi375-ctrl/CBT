@@ -44,6 +44,7 @@ const publicPaths = [
   "/api/auth/verify-email",
   "/api/health",
   "/api/seed",
+  "/api/school",  // Allow fetching school branding on login page
 ]
 
 const clearTokenCookie = (response: NextResponse) => {

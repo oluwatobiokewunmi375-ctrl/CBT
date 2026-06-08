@@ -44,6 +44,7 @@
     "start": "next start",
     "seed:mock": "node scripts/create-mock-accounts.cjs",
     "verify:seed": "node --enable-source-maps scripts/verify-seed.cjs",
+    "diagnose:login": "node scripts/diagnose-login.cjs",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
